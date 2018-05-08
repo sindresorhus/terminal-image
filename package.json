@@ -1,0 +1,50 @@
+{
+	"name": "terminal-image",
+	"version": "0.0.0",
+	"description": "Display images in the terminal",
+	"license": "MIT",
+	"repository": "sindresorhus/terminal-image",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "sindresorhus.com"
+	},
+	"engines": {
+		"node": ">=8"
+	},
+	"scripts": {
+		"test": "xo && ava"
+	},
+	"files": [
+		"index.js"
+	],
+	"keywords": [
+		"terminal",
+		"image",
+		"term",
+		"iterm",
+		"shell",
+		"console",
+		"command-line",
+		"img",
+		"pic",
+		"picture",
+		"photo",
+		"ansi",
+		"escape",
+		"jpg",
+		"jpeg",
+		"display",
+		"show",
+		"pixels"
+	],
+	"dependencies": {
+		"chalk": "^2.4.1",
+		"jimp": "^0.2.28",
+		"term-img": "^2.1.0"
+	},
+	"devDependencies": {
+		"ava": "*",
+		"xo": "*"
+	}
+}
