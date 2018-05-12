@@ -10,7 +10,7 @@ function asPercent(value) {
 	return `${Math.round(value * 100)}%`;
 }
 
-async function render(fileBuffer, factor) {
+async function render(fileBuffer, {factor}) {
 	const image = await Jimp.read(fileBuffer);
 	const columns = process.stdout.columns || 80;
 	const rows = process.stdout.rows || 24;
@@ -38,10 +38,10 @@ async function render(fileBuffer, factor) {
 	return ret;
 }
 
-module.exports = (fileBuffer, factor = 1) => {
+module.exports = (fileBuffer, {factor=1}={}) => {
 	return termImg(fileBuffer, {
 		width: asPercent(factor),
 		height: asPercent(factor),
-		fallback: () => render(fileBuffer, factor)
+		fallback: () => render(fileBuffer, {factor})
 	});
 };
