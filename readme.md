@@ -6,13 +6,14 @@ Works in any terminal that supports colors.
 
 <img src="screenshot.png" width="1082">
 
-*In iTerm, the image will be [displayed in full resolution](screenshot-iterm.jpg), since iTerm has [special image support](https://www.iterm2.com/documentation-images.html).*
+*In iTerm, the image will be [displayed in full resolution](screenshot-iterm.jpg),
+since iTerm has [special image support](https://www.iterm2.com/documentation-images.html).*
 
 
 ## Install
 
-```
-$ npm install terminal-image
+```sh
+npm install terminal-image
 ```
 
 
@@ -22,17 +23,18 @@ $ npm install terminal-image
 const terminalImage = require('terminal-image');
 
 (async () => {
-	console.log(await terminalImage.file('unicorn.jpg'));
+	console.log(await terminalImage('unicorn.jpg'));
 })();
 ```
 
-Optionally, you can specify a `factor` to scale the image:
+Optionally, you can specify the `heigh` and/or `width` to scale the image. To
+maintain aspect ratio, define only one of them.
 
 ```js
 const terminalImage = require('terminal-image');
 
 (async () => {
-	console.log(await terminalImage.file('unicorn.jpg', 0.5));
+	console.log(await terminalImage('unicorn.jpg', {width: 1024}));
 })();
 ```
 
@@ -41,31 +43,23 @@ const terminalImage = require('terminal-image');
 
 Supports PNG and JPEG images.
 
-### terminalImage.buffer(imageBuffer, [factor])
+### terminalImage(fileBuffer, [options])
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
-#### imageBuffer
+#### fileBuffer
 
-Type: `Buffer`
+Type: `Buffer`|`string`
 
-Buffer with the image.
-
-### terminalImage.file(filePath, [factor])
-
-Returns a `Promise<string>` with the ansi escape codes to display the image.
-
-#### filePath
-
-Type: `string`
-
-File path to the image.
+Buffer with the image, or path to the image file.
 
 
 ## Related
 
-- [terminal-image-cli](https://github.com/sindresorhus/terminal-image-cli) - CLI for this module
-- [terminal-link](https://github.com/sindresorhus/terminal-link) - Create clickable links in the terminal
+- [terminal-image-cli](https://github.com/sindresorhus/terminal-image-cli) - CLI
+	for this module
+- [terminal-link](https://github.com/sindresorhus/terminal-link) - Create
+	clickable links in the terminal
 - [chalk](https://github.com/chalk/chalk) - Style and color text in the terminal
 
 
