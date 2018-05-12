@@ -26,12 +26,22 @@ const terminalImage = require('terminal-image');
 })();
 ```
 
+Optionally, you can specify a `factor` to scale the image:
+
+```js
+const terminalImage = require('terminal-image');
+
+(async () => {
+	console.log(await terminalImage.file('unicorn.jpg', 0.5));
+})();
+```
+
 
 ## API
 
 Supports PNG and JPEG images.
 
-### terminalImage.buffer(imageBuffer)
+### terminalImage.buffer(imageBuffer, [factor])
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
@@ -41,7 +51,7 @@ Type: `Buffer`
 
 Buffer with the image.
 
-### terminalImage.file(filePath)
+### terminalImage.file(filePath, [factor])
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
