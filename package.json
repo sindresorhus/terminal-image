@@ -41,7 +41,8 @@
 	"dependencies": {
 		"@sindresorhus/jimp": "^0.3.0",
 		"chalk": "^2.4.1",
-		"term-img": "^2.1.0"
+		"term-img": "^2.1.0",
+		"terminal-char-width": "^1.0.8"
 	},
 	"devDependencies": {
 		"ava": "*",

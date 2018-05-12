@@ -3,18 +3,29 @@
 const Jimp = require('@sindresorhus/jimp');
 const chalk = require('chalk');
 const {string: termImg} = require('term-img');
+const terminalCharWidth = require('terminal-char-width');
 
-function asPercent(value) {
-	return `${Math.round(value * 100)}%`;
-}
+const CHAR_HEIGHT = 16;
+const CHAR_WIDTH = CHAR_HEIGHT * terminalCharWidth;
 
-async function render(fileBuffer, {factor}) {
+async function render(fileBuffer, {height, width}) {
 	const image = await Jimp.read(fileBuffer);
-	const columns = process.stdout.columns || 80;
-	const rows = process.stdout.rows || 24;
+	const {bitmap} = image;
 
-	if (image.bitmap.width > columns || (image.bitmap.height / 2) > rows) {
-		image.scaleToFit(columns * factor, rows * 2 * factor);
+	if (height === undefined && width === undefined) {
+		height = bitmap.height / CHAR_HEIGHT;
+		width = bitmap.width / CHAR_WIDTH;
+	} else if (height === undefined) {
+		height = bitmap.height * terminalCharWidth * width / bitmap.width;
+	} else {
+		width = bitmap.width / terminalCharWidth * height / bitmap.height;
+	}
+
+	// Each character has two vertical blocks, so we double the number of rows
+	height *= 2;
+
+	if (height !== bitmap.height || width !== bitmap.width) {
+		image.resize(width, height);
 	}
 
 	let ret = '';
@@ -52,10 +63,10 @@ async function render(fileBuffer, {factor}) {
 	return ret;
 }
 
-module.exports = (fileBuffer, {factor=1}={}) => {
-	return termImg(fileBuffer, {
-		width: asPercent(factor),
-		height: asPercent(factor),
-		fallback: () => render(fileBuffer, {factor})
-	});
+module.exports = function (fileBuffer, {height, width} = {}) {
+	function fallback() {
+		return render(fileBuffer, {height, width});
+	}
+
+	return termImg(fileBuffer, {fallback, height, width});
 };
