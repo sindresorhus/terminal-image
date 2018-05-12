@@ -8,7 +8,7 @@ const termImg = require('term-img');
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
 
-function asPercent (value) {
+function asPercent(value) {
 	return `${Math.round(value * 100)}%`;
 }
 
