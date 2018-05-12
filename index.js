@@ -8,12 +8,36 @@ const termImg = require('term-img');
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
 
-async function render(buffer) {
+function calculateHeightWidth(bitmap, height, width, preserveAspectRatio) {
+	if (height === undefined && width === undefined) {
+		height = bitmap.height;
+		width = bitmap.width;
+	} else if (height === undefined) {
+		height = preserveAspectRatio ? bitmap.height * width / bitmap.width : bitmap.height;
+	} else if (width === undefined) {
+		width = preserveAspectRatio ? bitmap.width * height / bitmap.height : bitmap.width;
+	}
+
+	height = Math.round(height);
+	width = Math.round(width);
+
+	return {height, width};
+}
+
+async function render(buffer, {height: inputHeight, width: inputWidth, preserveAspectRatio}) {
 	const image = await Jimp.read(buffer);
+	const {bitmap} = image;
+
+	const {height, width} = calculateHeightWidth(bitmap, inputHeight, inputWidth, preserveAspectRatio);
+
+	if (height !== bitmap.height || width !== bitmap.width) {
+		image.resize(width, height);
+	}
+
 	const columns = process.stdout.columns || 80;
 	const rows = process.stdout.rows || 24;
 
-	if (image.bitmap.width > columns || (image.bitmap.height / 2) > rows) {
+	if (width > columns || (height / 2) > rows) {
 		image.scaleToFit(columns, rows * 2);
 	}
 
@@ -36,12 +60,13 @@ async function render(buffer) {
 	return result;
 }
 
-exports.buffer = async buffer => {
+exports.buffer = async (buffer, {height, width, preserveAspectRatio = true} = {}) => {
 	return termImg.string(buffer, {
-		width: '100%',
-		height: '100%',
-		fallback: () => render(buffer)
+		width: width || '100%',
+		height: height || '100%',
+		fallback: () => render(buffer, {height, width, preserveAspectRatio})
 	});
 };
 
-exports.file = async filePath => exports.buffer(await readFile(filePath));
+exports.file = async (filePath, options = {}) =>
+	exports.buffer(await readFile(filePath), options);

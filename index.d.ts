@@ -24,6 +24,10 @@ declare const terminalImage: {
 	Display images in the terminal.
 
 	@param filePath - File path to the image.
+	@param options - Image render options
+	@param options.width - Custom image width
+	@param options.height - Custom image height
+	@param options.preserveAspectRatio - Whether maintain image aspect ratio or not. By default true
 	@returns The ansi escape codes to display the image.
 
 	@example
@@ -34,8 +38,12 @@ declare const terminalImage: {
 		console.log(await terminalImage.file('unicorn.jpg'));
 	})();
 	```
-	*/
-	file(filePath: string): Promise<string>;
+	 */
+	file(filePath: string, options?: {
+		width?: Number,
+		height?: Number,
+		preserveAspectRatio: Boolean
+	}): Promise<string>;
 }
 
 export = terminalImage;

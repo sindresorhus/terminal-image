@@ -26,6 +26,26 @@ const terminalImage = require('terminal-image');
 })();
 ```
 
+Optionally, you can specify the `height` and/or `width` to scale the image.
+
+```js
+const terminalImage = require('terminal-image');
+
+(async () => {
+	console.log(await terminalImage.file('unicorn.jpg', { width: 1024, height: 1024 }));
+})();
+```
+
+By default, aspect ratio is always maintained.
+If you don't want to maintain aspect ratio set `preserveAspectRatio` to false. However, your image will be scaled to fit the size of the terminal.
+
+```js
+const terminalImage = require('terminal-image');
+
+(async () => {
+	console.log(await terminalImage.file('unicorn.jpg', { width: 1024, preserveAspectRatio: false }));
+})();
+```
 
 ## API
 
