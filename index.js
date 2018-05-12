@@ -23,11 +23,17 @@ async function render(fileBuffer, {factor}) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 
-			if (a === 0 && a2 === 0) {
+			// Both pixels are full transparent
+			if (a === 0 && a2 === 0)
 				ret += chalk.reset(' ');
-			} else {
+
+			// Both pixels has the same color
+			else if (r === r2 && g === g2 && b === b2)
+				ret += chalk.rgb(r, g, b)('█');
+
+			// Pixels has different colors
+			else
 				ret += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)('▄');
-			}
 		}
 
 		ret += '\n';
