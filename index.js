@@ -1,19 +1,16 @@
 'use strict';
-const util = require('util');
-const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('@sindresorhus/jimp');
 const termImg = require('term-img');
 
 const PIXEL = '\u2584';
-const readFile = util.promisify(fs.readFile);
 
 function asPercent(value) {
 	return `${Math.round(value * 100)}%`;
 }
 
-async function render(buffer, factor) {
-	const image = await Jimp.read(buffer);
+async function render(fileBuffer, factor) {
+	const image = await Jimp.read(fileBuffer);
 	const columns = process.stdout.columns || 80;
 	const rows = process.stdout.rows || 24;
 
@@ -40,12 +37,10 @@ async function render(buffer, factor) {
 	return ret;
 }
 
-exports.buffer = async (buffer, factor = 1) => {
-	return termImg.string(buffer, {
+module.exports = (fileBuffer, factor = 1) => {
+	return termImg.string(fileBuffer, {
 		width: asPercent(factor),
 		height: asPercent(factor),
-		fallback: () => render(buffer, factor)
+		fallback: () => render(fileBuffer, factor)
 	});
 };
-
-exports.file = async (filePath, factor) => exports.buffer(await readFile(filePath), factor);
