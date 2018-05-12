@@ -18,8 +18,9 @@ async function render(fileBuffer, {factor}) {
 	}
 
 	let ret = '';
-	for (let y = 0; y < image.bitmap.height - 1; y += 2) {
-		for (let x = 0; x < image.bitmap.width; x++) {
+	let y = 0;
+	while (y < bitmap.height - 1) {
+		for (let x = 0; x < bitmap.width; x++) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 
@@ -33,10 +34,20 @@ async function render(fileBuffer, {factor}) {
 
 			// Pixels has different colors
 			else
-				ret += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)('▄');
+				ret += chalk.rgb(r, g, b).bgRgb(r2, g2, b2)('▀');
 		}
 
 		ret += '\n';
+		y += 2;
+	}
+
+	// Image has an odd number of rows
+	if (y === bitmap.height - 1) {
+		for (let x = 0; x < bitmap.width; x++) {
+			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+			ret += chalk.rgb(r, g, b)('▀');
+		}
 	}
 
 	return ret;
