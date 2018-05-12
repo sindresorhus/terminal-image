@@ -4,8 +4,6 @@ const Jimp = require('@sindresorhus/jimp');
 const chalk = require('chalk');
 const {string: termImg} = require('term-img');
 
-const PIXEL = '\u2584';
-
 function asPercent(value) {
 	return `${Math.round(value * 100)}%`;
 }
@@ -28,7 +26,7 @@ async function render(fileBuffer, {factor}) {
 			if (a === 0 && a2 === 0) {
 				ret += chalk.reset(' ');
 			} else {
-				ret += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)(PIXEL);
+				ret += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)('▄');
 			}
 		}
 
