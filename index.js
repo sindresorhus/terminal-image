@@ -24,17 +24,16 @@ async function render(fileBuffer, {factor}) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 
-			// Both pixels are full transparent
-			if (a === 0 && a2 === 0)
+			if (a === 0 && a2 === 0) {
+				// Both pixels are full transparent
 				ret += chalk.reset(' ');
-
-			// Both pixels has the same color
-			else if (r === r2 && g === g2 && b === b2)
+			} else if (r === r2 && g === g2 && b === b2) {
+				// Both pixels has the same color
 				ret += chalk.rgb(r, g, b)('█');
-
-			// Pixels has different colors
-			else
+			} else {
+				// Pixels has different colors
 				ret += chalk.rgb(r, g, b).bgRgb(r2, g2, b2)('▀');
+			}
 		}
 
 		ret += '\n';
@@ -44,7 +43,7 @@ async function render(fileBuffer, {factor}) {
 	// Image has an odd number of rows
 	if (y === bitmap.height - 1) {
 		for (let x = 0; x < bitmap.width; x++) {
-			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
+			const {r, g, b} = Jimp.intToRGBA(image.getPixelColor(x, y));
 
 			ret += chalk.rgb(r, g, b)('▀');
 		}
