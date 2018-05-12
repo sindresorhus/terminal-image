@@ -1,7 +1,8 @@
 'use strict';
-const chalk = require('chalk');
+
 const Jimp = require('@sindresorhus/jimp');
-const termImg = require('term-img');
+const chalk = require('chalk');
+const {string: termImg} = require('term-img');
 
 const PIXEL = '\u2584';
 
@@ -38,7 +39,7 @@ async function render(fileBuffer, factor) {
 }
 
 module.exports = (fileBuffer, factor = 1) => {
-	return termImg.string(fileBuffer, {
+	return termImg(fileBuffer, {
 		width: asPercent(factor),
 		height: asPercent(factor),
 		fallback: () => render(fileBuffer, factor)
