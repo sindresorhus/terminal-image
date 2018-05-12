@@ -23,9 +23,9 @@ async function render(fileBuffer, {factor}) {
 	for (let y = 0; y < image.bitmap.height - 1; y += 2) {
 		for (let x = 0; x < image.bitmap.width; x++) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
-			const {r: r2, g: g2, b: b2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
+			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 
-			if (a === 0) {
+			if (a === 0 && a2 === 0) {
 				ret += chalk.reset(' ');
 			} else {
 				ret += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)(PIXEL);
