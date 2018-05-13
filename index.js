@@ -32,8 +32,7 @@ async function render(fileBuffer, {height, width}) {
 	}
 
 	let ret = '';
-	let y = 0;
-	while (y < bitmap.height - 1) {
+	for (let y = 0; y < bitmap.height - 1; y += 2) {
 		for (let x = 0; x < bitmap.width; x++) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
@@ -51,7 +50,6 @@ async function render(fileBuffer, {height, width}) {
 		}
 
 		ret += '\n';
-		y += 2;
 	}
 
 	// Image has an odd number of rows
