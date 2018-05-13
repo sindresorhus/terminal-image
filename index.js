@@ -24,6 +24,9 @@ async function render(fileBuffer, {height, width}) {
 	// Each character has two vertical blocks, so we double the number of rows
 	height *= 2;
 
+	height = Math.round(height);
+	width = Math.round(width);
+
 	if (height !== bitmap.height || width !== bitmap.width) {
 		image.resize(width, height);
 	}
@@ -52,7 +55,8 @@ async function render(fileBuffer, {height, width}) {
 	}
 
 	// Image has an odd number of rows
-	if (y === bitmap.height - 1) {
+	if (height % 2) {
+		const y = height - 1;
 		for (let x = 0; x < bitmap.width; x++) {
 			const {r, g, b} = Jimp.intToRGBA(image.getPixelColor(x, y));
 
