@@ -27,7 +27,7 @@ const terminalImage = require('terminal-image');
 })();
 ```
 
-Optionally, you can specify the `heigh` and/or `width` to scale the image. To
+Optionally, you can specify the `height` and/or `width` to scale the image. To
 maintain aspect ratio, define only one of them.
 
 ```js
