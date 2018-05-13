@@ -66,4 +66,4 @@ File path to the image.
 
 ## License
 
-MIT © [Sindre Sorhus](https://sindresorhus.com)
+MIT © [Sindre Sorhus](https://sindresorhus.com), [Faisal KANOUT](https://kanout.com)
