@@ -24,6 +24,11 @@ const terminalImage = require('terminal-image');
 (async () => {
 	console.log(await terminalImage.file('unicorn.jpg'));
 })();
+
+// Image from url
+(async () => {
+	console.log(await terminalImage.url('https://www.host.com/img.jpg'));
+})();
 ```
 
 
