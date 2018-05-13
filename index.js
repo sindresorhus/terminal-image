@@ -42,6 +42,12 @@ async function render(fileBuffer, {height, width}) {
 			if (a === 0 && a2 === 0) {
 				// Both pixels are full transparent
 				row += chalk.reset(' ');
+			} else if (a) {
+				// Only upper pixel is full transparent
+				row += chalk.rgb(r2, g2, b2)('▄');
+			} else if (a2) {
+				// Only lower pixel is full transparent
+				row += chalk.rgb(r, g, b)('▀');
 			} else if (r === r2 && g === g2 && b === b2) {
 				// Both pixels has the same color
 				row += chalk.rgb(r, g, b)('█');
