@@ -31,38 +31,44 @@ async function render(fileBuffer, {height, width}) {
 		image.resize(width, height);
 	}
 
-	let ret = '';
+	const ret = new Array(Math.ceil(bitmap.height / 2));
 	for (let y = 0; y < bitmap.height - 1; y += 2) {
+		const rowIndex = y / 2;
+		let row = '';
 		for (let x = 0; x < bitmap.width; x++) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2, a: a2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 
 			if (a === 0 && a2 === 0) {
 				// Both pixels are full transparent
-				ret += chalk.reset(' ');
+				row += chalk.reset(' ');
 			} else if (r === r2 && g === g2 && b === b2) {
 				// Both pixels has the same color
-				ret += chalk.rgb(r, g, b)('█');
+				row += chalk.rgb(r, g, b)('█');
 			} else {
 				// Pixels has different colors
-				ret += chalk.rgb(r, g, b).bgRgb(r2, g2, b2)('▀');
+				row += chalk.rgb(r, g, b).bgRgb(r2, g2, b2)('▀');
 			}
 		}
 
-		ret += '\n';
+		ret[rowIndex] = row;
 	}
 
 	// Image has an odd number of rows
 	if (height % 2) {
 		const y = height - 1;
+		const rowIndex = y / 2;
+		let row = '';
 		for (let x = 0; x < bitmap.width; x++) {
 			const {r, g, b} = Jimp.intToRGBA(image.getPixelColor(x, y));
 
-			ret += chalk.rgb(r, g, b)('▀');
+			row += chalk.rgb(r, g, b)('▀');
 		}
+
+		ret[rowIndex] = row;
 	}
 
-	return ret;
+	return ret.join('\n');
 }
 
 module.exports = function (fileBuffer, {height, width} = {}) {
