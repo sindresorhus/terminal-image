@@ -7,6 +7,8 @@ const termImg = require('term-img');
 
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
+const toArray = require('stream-to-array');
+const request = require('request');
 
 async function render(buffer) {
 	const image = await Jimp.read(buffer);
@@ -44,4 +46,11 @@ exports.buffer = async buffer => {
 	});
 };
 
+const getImgFromUrl = async url => {
+	const imgBuffParts = await toArray(request.get(url));
+	const buffers = imgBuffParts.map(part => Buffer.isBuffer(part) ? part : Buffer.from(part));
+	return Buffer.concat(buffers);
+};
+
 exports.file = async filePath => exports.buffer(await readFile(filePath));
+exports.url = async url => exports.buffer(await getImgFromUrl(url));
