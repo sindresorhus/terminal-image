@@ -87,16 +87,29 @@ async function render(fileBuffer, {height, width}) {
 			let bgColor = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
 			const glyph = getGlyph(fgColor, bgColor);
 
-			// Special case where upper pixel is full transparent but lower one not,
-			// set foreground color to the lower pixel one and set background as
-			// transparent since we are drawing a lower half block
-			if (fgColor.a === 0 && bgColor.a > 0) {
-				fgColor = bgColor;
-				bgColor = {a: 0};
+			// Optimize colors changes based on their calculated glyph
+			switch (glyph) {
+				// Both upper and lower blocks are full transparent, ignore foreground
+				case ' ':
+					fgColor = prevFgColor;
+					break;
+
+				// Special case where upper pixel is full transparent but lower one not,
+				// set foreground color to the lower pixel one and set background as
+				// transparent since we are drawing a lower half block
+				case '▄':
+					fgColor = bgColor;
+					bgColor = {a: 0};
+					break;
+
+				// Both upper and lower blocks has equal color, ignore background
+				case '█':
+					bgColor = prevBgColor;
+					break;
+
+				default:
 			}
 
-			// TODO optimization: check foreground and background independently and
-			// also the case of upper block full transparent
 			if (equalColor(prevFgColor, fgColor) && equalColor(prevBgColor, bgColor)) {
 				buffer += glyph;
 				continue;
