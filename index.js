@@ -52,7 +52,7 @@ function getGlyph(upper, lower) {
 	return ' ';
 }
 
-async function render(fileBuffer, {height, width}) {
+async function render(fileBuffer, {asArray, height, width}) {
 	const image = await Jimp.read(fileBuffer);
 	const {bitmap} = image;
 
@@ -151,12 +151,12 @@ async function render(fileBuffer, {height, width}) {
 		ret[y / 2] = row + getFgColor(prevFgColor)(buffer);
 	}
 
-	return ret.join('\n');
+	return asArray ? ret : ret.join('\n');
 }
 
-module.exports = function (fileBuffer, {height, width} = {}) {
+module.exports = function (fileBuffer, {asArray, height, width} = {}) {
 	function fallback() {
-		return render(fileBuffer, {height, width});
+		return render(fileBuffer, {asArray, height, width});
 	}
 
 	return termImg(fileBuffer, {fallback, height, width});
