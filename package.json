@@ -13,7 +13,8 @@
 		"node": ">=8"
 	},
 	"scripts": {
-		"test": "xo && ava"
+		"test": "xo && ava",
+		"lint-fix": "xo --fix"
 	},
 	"files": [
 		"index.js"
@@ -41,6 +42,8 @@
 	"dependencies": {
 		"@sindresorhus/jimp": "^0.3.0",
 		"chalk": "^2.4.1",
+		"request": "^2.85.0",
+		"stream-to-array": "^2.3.0",
 		"term-img": "^2.1.0"
 	},
 	"devDependencies": {
