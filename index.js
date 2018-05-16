@@ -61,7 +61,7 @@ async function render(fileBuffer, {asArray, height, width}) {
 		width = bitmap.width / CHAR_WIDTH;
 	} else if (height === undefined) {
 		height = bitmap.height * terminalCharWidth * width / bitmap.width;
-	} else {
+	} else if (width === undefined) {
 		width = bitmap.width / terminalCharWidth * height / bitmap.height;
 	}
 
