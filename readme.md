@@ -52,6 +52,21 @@ Type: `string`
 File path to the image.
 
 
+## Tip
+
+### Display a remote image
+
+```js
+const terminalImage = require('terminal-image');
+const got = require('got');
+
+(async () => {
+	const {body} = await got('sindresorhus.com/unicorn', {encoding: null});
+	console.log(await terminalImage.buffer(body));
+})();
+```
+
+
 ## Related
 
 - [terminal-image-cli](https://github.com/sindresorhus/terminal-image-cli) - CLI for this module
