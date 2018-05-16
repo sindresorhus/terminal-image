@@ -8,13 +8,17 @@ const termImg = require('term-img');
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
 
-async function render(buffer) {
+function asPercent(value) {
+	return `${Math.round(value * 100)}%`;
+}
+
+async function render(buffer, factor) {
 	const image = await Jimp.read(buffer);
 	const columns = process.stdout.columns || 80;
 	const rows = process.stdout.rows || 24;
 
 	if (image.bitmap.width > columns || (image.bitmap.height / 2) > rows) {
-		image.scaleToFit(columns, rows * 2);
+		image.scaleToFit(columns * factor, rows * 2 * factor);
 	}
 
 	let ret = '';
@@ -36,12 +40,12 @@ async function render(buffer) {
 	return ret;
 }
 
-exports.buffer = async buffer => {
+exports.buffer = async (buffer, factor = 1) => {
 	return termImg.string(buffer, {
-		width: '100%',
-		height: '100%',
-		fallback: () => render(buffer)
+		width: asPercent(factor),
+		height: asPercent(factor),
+		fallback: () => render(buffer, factor)
 	});
 };
 
-exports.file = async filePath => exports.buffer(await readFile(filePath));
+exports.file = async (filePath, factor) => exports.buffer(await readFile(filePath), factor);
