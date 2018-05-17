@@ -51,6 +51,15 @@ Type: `string`
 
 File path to the image.
 
+### terminalImage.imageData(imageData)
+
+Returns a `string` with the ansi escape codes to display the image.
+
+#### imageData
+
+Type: `{ height: number, width: number, data: Uint8ClampedArray }`
+
+[ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData)-like object representing raw rgba pixels and image dimensions.
 
 ## Tip
 
