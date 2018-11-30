@@ -36,7 +36,6 @@ async function render(buffer) {
 	return ret;
 }
 
-// eslint-disable-next-line require-await
 exports.buffer = async buffer => {
 	return termImg.string(buffer, {
 		width: '100%',
