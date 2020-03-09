@@ -24,11 +24,11 @@ declare const terminalImage: {
 	Display images in the terminal.
 
 	@param filePath - File path to the image.
-	@param options - Image render options
-	@param options.width - Custom image width
-	@param options.height - Custom image height
-	@param options.preserveAspectRatio - Whether maintain image aspect ratio or not. By default true
-	@returns The ansi escape codes to display the image.
+	@param options - Image rendering options.
+	@param options.width - Custom image width.
+	@param options.height - Custom image height.
+	@param options.preserveAspectRatio - Whether to maintain image aspect ratio or not. Default: true.
+	@returns The ANSI escape codes to display the image.
 
 	@example
 	```
@@ -39,11 +39,14 @@ declare const terminalImage: {
 	})();
 	```
 	 */
-	file(filePath: string, options?: {
-		width?: Number,
-		height?: Number,
-		preserveAspectRatio: Boolean
-	}): Promise<string>;
+	file(
+		filePath: string,
+		options?: {
+			width?: number,
+			height?: number,
+			preserveAspectRatio?: boolean
+		}
+	): Promise<string>;
 }
 
 export = terminalImage;
