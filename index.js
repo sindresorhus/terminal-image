@@ -10,7 +10,7 @@ const readFile = util.promisify(fs.readFile);
 
 async function render(buffer) {
 	const image = await Jimp.read(buffer);
-	const columns = process.stdout.columns - 1 || 80;
+	const columns = process.stdout.columns || 80;
 	const rows = process.stdout.rows || 24;
 
 	if (image.bitmap.width > columns || (image.bitmap.height / 2) > rows) {
@@ -30,7 +30,9 @@ async function render(buffer) {
 			}
 		}
 
-		result += '\n';
+		if(image.bitmap.width < process.stdout.columns){
+			result += '\n';
+		}
 	}
 
 	return result;
