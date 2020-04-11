@@ -8,38 +8,55 @@ const termImg = require('term-img');
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
 
-function calculateHeightWidth(bitmap, height, width, preserveAspectRatio) {
-	if (height === undefined && width === undefined) {
-		height = bitmap.height;
-		width = bitmap.width;
-	} else if (height === undefined) {
-		height = preserveAspectRatio ? bitmap.height * width / bitmap.width : bitmap.height;
-	} else if (width === undefined) {
-		width = preserveAspectRatio ? bitmap.width * height / bitmap.height : bitmap.width;
-	}
-
-	height = Math.round(height);
-	width = Math.round(width);
-
-	return {height, width};
+function scale(width, height, originalWidth, originalHeight) {
+	const originalRatio = originalWidth / originalHeight;
+	const f = (width / height > originalRatio ? height / originalHeight : width / originalWidth);
+	width = f * originalWidth;
+	height = f * originalHeight;
+	return {width, height};
 }
 
-async function render(buffer, {height: inputHeight, width: inputWidth, preserveAspectRatio}) {
+function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
+	const terminalColumns = process.stdout.columns || 80;
+	const terminalRows = process.stdout.rows || 24;
+
+	let width;
+	let height;
+
+	if (inputHeight && inputWidth) {
+		width = inputWidth;
+		height = inputHeight * 2;
+
+		if (preserveAspectRatio) {
+			({width, height} = scale(width, height, imageWidth, imageHeight));
+		}
+	} else if (inputWidth) {
+		width = inputWidth;
+		height = imageHeight * width / imageWidth;
+	} else if (inputHeight) {
+		height = inputHeight * 2;
+		width = imageWidth * height / imageHeight;
+	} else {
+		({width, height} = scale(terminalColumns, terminalRows * 2, imageWidth, imageHeight));
+	}
+
+	if (width > terminalColumns || (height / 2) > terminalRows) {
+		({width, height} = scale(terminalColumns, terminalRows * 2, width, height));
+	}
+
+	width = Math.round(width);
+	height = Math.round(height);
+
+	return {width, height};
+}
+
+async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
 	const image = await Jimp.read(buffer);
 	const {bitmap} = image;
 
-	const {height, width} = calculateHeightWidth(bitmap, inputHeight, inputWidth, preserveAspectRatio);
+	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
 
-	if (height !== bitmap.height || width !== bitmap.width) {
-		image.resize(width, height);
-	}
-
-	const columns = process.stdout.columns || 80;
-	const rows = process.stdout.rows || 24;
-
-	if (width > columns || (height / 2) > rows) {
-		image.scaleToFit(columns, rows * 2);
-	}
+	image.resize(width, height);
 
 	let result = '';
 	for (let y = 0; y < image.bitmap.height - 1; y += 2) {
