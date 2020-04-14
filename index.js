@@ -10,10 +10,25 @@ const readFile = util.promisify(fs.readFile);
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
-	const f = (width / height > originalRatio ? height / originalHeight : width / originalWidth);
-	width = f * originalWidth;
-	height = f * originalHeight;
+	const factor = (width / height > originalRatio ? height / originalHeight : width / originalWidth);
+	width = factor * originalWidth;
+	height = factor * originalHeight;
 	return {width, height};
+}
+
+function checkAndGetDimensionValue(value, percentageBase) {
+	if (typeof value === 'string' && value.endsWith('%')) {
+		const percentageValue = parseFloat(value);
+		if (!isNaN(percentageValue) && percentageValue > 0 && percentageValue <= 100) {
+			return Math.floor(percentageValue / 100 * percentageBase);
+		}
+	}
+
+	if (typeof value === 'number') {
+		return value;
+	}
+
+	throw new Error(`${value} is not a valid dimension value`);
 }
 
 function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
@@ -24,17 +39,17 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 	let height;
 
 	if (inputHeight && inputWidth) {
-		width = inputWidth;
-		height = inputHeight * 2;
+		width = checkAndGetDimensionValue(inputWidth, terminalColumns);
+		height = checkAndGetDimensionValue(inputHeight, terminalRows) * 2;
 
 		if (preserveAspectRatio) {
 			({width, height} = scale(width, height, imageWidth, imageHeight));
 		}
 	} else if (inputWidth) {
-		width = inputWidth;
+		width = checkAndGetDimensionValue(inputWidth, terminalColumns);
 		height = imageHeight * width / imageWidth;
 	} else if (inputHeight) {
-		height = inputHeight * 2;
+		height = checkAndGetDimensionValue(inputHeight, terminalRows) * 2;
 		width = imageWidth * height / imageHeight;
 	} else {
 		({width, height} = scale(terminalColumns, terminalRows * 2, imageWidth, imageHeight));

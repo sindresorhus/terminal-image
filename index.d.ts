@@ -21,13 +21,16 @@ declare const terminalImage: {
 	buffer(imageBuffer: Buffer): Promise<string>;
 
 	/**
-	Display images in the terminal.
+	Display images in the terminal. Please note that the image will always be scaled to fit the size of the terminal.
+	Optionally, you can specify the `height` and/or `width` to scale the image.
+	That can be either the percentage of the terminal window or number of rows and/or columns.
+	If width and height are not defined, by default the image will take the width and height of the terminal.
 
 	@param filePath - File path to the image.
 	@param options - Image rendering options.
-	@param options.width - Custom image width.
-	@param options.height - Custom image height.
-	@param options.preserveAspectRatio - Whether to maintain image aspect ratio or not. Default: true.
+	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal.
+	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal.
+	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
 	@returns The ANSI escape codes to display the image.
 
 	@example
@@ -35,10 +38,10 @@ declare const terminalImage: {
 	import terminalImage = require('terminal-image');
 
 	(async () => {
-		console.log(await terminalImage.file('unicorn.jpg'));
+		console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
 	})();
 	```
-	 */
+	*/
 	file(
 		filePath: string,
 		options?: {
