@@ -13,7 +13,7 @@ declare const terminalImage: {
 	import got = require('got');
 
 	(async () => {
-		const {body} = await got('sindresorhus.com/unicorn', {encoding: null});
+		const body = await got('https://sindresorhus.com/unicorn').buffer();
 		console.log(await terminalImage.buffer(body));
 	})();
 	```

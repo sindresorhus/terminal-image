@@ -8,13 +8,11 @@ Works in any terminal that supports colors.
 
 *In iTerm, the image will be [displayed in full resolution](screenshot-iterm.jpg), since iTerm has [special image support](https://www.iterm2.com/documentation-images.html).*
 
-
 ## Install
 
 ```
 $ npm install terminal-image
 ```
-
 
 ## Usage
 
@@ -25,7 +23,6 @@ const terminalImage = require('terminal-image');
 	console.log(await terminalImage.file('unicorn.jpg'));
 })();
 ```
-
 
 ## API
 
@@ -51,7 +48,6 @@ Type: `string`
 
 File path to the image.
 
-
 ## Tip
 
 ### Display a remote image
@@ -61,19 +57,13 @@ const terminalImage = require('terminal-image');
 const got = require('got');
 
 (async () => {
-	const {body} = await got('sindresorhus.com/unicorn', {encoding: null});
+	const body = await got('https://sindresorhus.com/unicorn').buffer();
 	console.log(await terminalImage.buffer(body));
 })();
 ```
-
 
 ## Related
 
 - [terminal-image-cli](https://github.com/sindresorhus/terminal-image-cli) - CLI for this module
 - [terminal-link](https://github.com/sindresorhus/terminal-link) - Create clickable links in the terminal
 - [chalk](https://github.com/chalk/chalk) - Style and color text in the terminal
-
-
-## License
-
-MIT © [Sindre Sorhus](https://sindresorhus.com)
