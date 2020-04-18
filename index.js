@@ -18,8 +18,8 @@ function scale(width, height, originalWidth, originalHeight) {
 
 function checkAndGetDimensionValue(value, percentageBase) {
 	if (typeof value === 'string' && value.endsWith('%')) {
-		const percentageValue = parseFloat(value);
-		if (!isNaN(percentageValue) && percentageValue > 0 && percentageValue <= 100) {
+		const percentageValue = Number.parseFloat(value);
+		if (!Number.isNaN(percentageValue) && percentageValue > 0 && percentageValue <= 100) {
 			return Math.floor(percentageValue / 100 * percentageBase);
 		}
 	}

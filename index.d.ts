@@ -22,9 +22,14 @@ declare const terminalImage: {
 
 	/**
 	Display images in the terminal. Please note that the image will always be scaled to fit the size of the terminal.
-	Optionally, you can specify the `height` and/or `width` to scale the image.
+	Optionally, you can specify the height and/or width to scale the image.
 	That can be either the percentage of the terminal window or number of rows and/or columns.
+	Please note that the image will always be scaled to fit the size of the terminal.
 	If width and height are not defined, by default the image will take the width and height of the terminal.
+	It is recommended to use the percentage option.
+	That can be either the percentage of the terminal window or number of rows and/or columns.
+	By default, aspect ratio is always maintained. If you don't want to maintain aspect ratio, set `preserveAspectRatio` to false.
+	However, your image will be scaled to fit the size of the terminal.
 
 	@param filePath - File path to the image.
 	@param options - Image rendering options.
