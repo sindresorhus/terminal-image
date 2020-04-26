@@ -61,9 +61,35 @@ const terminalImage = require('terminal-image');
 
 Supports PNG and JPEG images.
 
-### terminalImage.buffer(imageBuffer)
+### terminalImage.buffer(imageBuffer, options?)
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
+
+##### options
+
+Type: `object`
+
+Optional parameters to render the image
+
+##### options.height
+
+Type: `string` | `number`
+
+Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
+
+##### options.width
+
+Type: `string` | `number`
+
+Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
+
+##### options.preserveAspectRatio
+
+Type: `boolean`
+
+Default: `true`
+
+Optional: Whether to maintain image aspect ratio or not.
 
 #### imageBuffer
 
@@ -71,7 +97,7 @@ Type: `Buffer`
 
 Buffer with the image.
 
-### terminalImage.file(filePath)
+### terminalImage.file(filePath, options)
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
@@ -81,6 +107,31 @@ Type: `string`
 
 File path to the image.
 
+##### options
+
+Type: `object`
+
+Optional parameters to render the image
+
+##### options.height
+
+Type: `string` | `number`
+
+Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
+
+##### options.width
+
+Type: `string` | `number`
+
+Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
+
+##### options.preserveAspectRatio
+
+Type: `boolean`
+
+Default: `true`
+
+Optional: Whether to maintain image aspect ratio or not.
 
 ## Tip
 
