@@ -25,7 +25,7 @@ declare const terminalImage: {
 	import got = require('got');
 
 	(async () => {
-		const {body} = await got('sindresorhus.com/unicorn', {encoding: null});
+		const body = await got('https://sindresorhus.com/unicorn').buffer();
 		console.log(await terminalImage.buffer(body));
 		console.log(await terminalImage.buffer(body, {width: '50%', height: '50%'}));
 		console.log(await terminalImage.buffer(body, {width: 50 }));
