@@ -37,6 +37,7 @@ const terminalImage = require('terminal-image');
 ```
 
 You can set width and/or height as columns and/or rows of the terminal window as well.
+
 ```js
 const terminalImage = require('terminal-image');
 
@@ -67,27 +68,28 @@ Returns a `Promise<string>` with the ansi escape codes to display the image.
 
 Type: `object`
 
-Optional parameters to render the image
+###### height
 
-##### options.height
+Type: `string | number`
 
-Type: `string` | `number`
+Custom image height.
 
-Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
+Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 
-##### options.width
+###### width
 
-Type: `string` | `number`
+Type: `string | number`
 
-Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
+Custom image width.
 
-##### options.preserveAspectRatio
+Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 
-Type: `boolean`
+###### preserveAspectRatio
 
+Type: `boolean`\
 Default: `true`
 
-Optional: Whether to maintain image aspect ratio or not.
+Whether to maintain image aspect ratio or not.
 
 #### imageBuffer
 
@@ -109,28 +111,28 @@ File path to the image.
 
 Type: `object`
 
-Optional parameters to render the image
+###### height
 
-##### options.height
+Type: `string | number`
 
-Type: `string` | `number`
+Custom image height.
 
-Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
+Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 
-##### options.width
+###### width
 
-Type: `string` | `number`
+Type: `string | number`
 
-Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
+Custom image width.
 
-##### options.preserveAspectRatio
+Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 
-Type: `boolean`
+###### preserveAspectRatio
 
+Type: `boolean`\
 Default: `true`
 
-Optional: Whether to maintain image aspect ratio or not.
-
+Whether to maintain image aspect ratio or not.
 
 ## Tip
 
