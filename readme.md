@@ -97,7 +97,7 @@ Type: `Buffer`
 
 Buffer with the image.
 
-### terminalImage.file(filePath, options)
+### terminalImage.file(filePath, options?)
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
