@@ -33,11 +33,11 @@ declare const terminalImage: {
 	})();
 	```
 	*/
-	buffer(imageBuffer: Buffer, options?: {
-		width?: number,
-		height?: number,
-		preserveAspectRatio?: boolean
-	}): Promise<string>;
+	buffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
+		width?: number;
+		height?: number;
+		preserveAspectRatio?: boolean;
+	}>) => Promise<string>;
 
 	/**
 	Display images in the terminal. Please note that the image will always be scaled to fit the size of the terminal.
@@ -57,8 +57,6 @@ declare const terminalImage: {
 	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
 	@returns The ANSI escape codes to display the image.
 
-
-
 	@example
 	```
 	const terminalImage = require('terminal-image');
@@ -71,14 +69,14 @@ declare const terminalImage: {
 	})();
 	```
 	*/
-	file(
+	file: (
 		filePath: string,
-		options?: {
-			width?: number,
-			height?: number,
-			preserveAspectRatio?: boolean
-		}
-	): Promise<string>;
-}
+		options?: Readonly<{
+			width?: number;
+			height?: number;
+			preserveAspectRatio?: boolean;
+		}>
+	) => Promise<string>;
+};
 
 export = terminalImage;

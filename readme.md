@@ -1,4 +1,4 @@
-# terminal-image [![Build Status](https://travis-ci.org/sindresorhus/terminal-image.svg?branch=master)](https://travis-ci.org/sindresorhus/terminal-image)
+# terminal-image [![Build Status](https://travis-ci.com/sindresorhus/terminal-image.svg?branch=master)](https://travis-ci.com/sindresorhus/terminal-image)
 
 > Display images in the terminal
 

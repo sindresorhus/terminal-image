@@ -92,10 +92,10 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 	return result;
 }
 
-exports.buffer = async (buffer, {height, width, preserveAspectRatio = true} = {}) => {
+exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
 	return termImg.string(buffer, {
-		width: width || '100%',
-		height: height || '100%',
+		width,
+		height,
 		fallback: () => render(buffer, {height, width, preserveAspectRatio})
 	});
 };
