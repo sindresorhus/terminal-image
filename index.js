@@ -55,7 +55,7 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 		({width, height} = scale(terminalColumns, terminalRows * 2, imageWidth, imageHeight));
 	}
 
-	if (width > terminalColumns || (height / 2) > terminalRows) {
+	if (width > terminalColumns) {
 		({width, height} = scale(terminalColumns, terminalRows * 2, width, height));
 	}
 
