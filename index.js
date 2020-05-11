@@ -1,12 +1,10 @@
 'use strict';
-const util = require('util');
 const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('@sindresorhus/jimp');
 const termImg = require('term-img');
 
 const PIXEL = '\u2584';
-const readFile = util.promisify(fs.readFile);
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
@@ -101,4 +99,4 @@ exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspect
 };
 
 exports.file = async (filePath, options = {}) =>
-	exports.buffer(await readFile(filePath), options);
+	exports.buffer(await fs.promises.readFile(filePath), options);
