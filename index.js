@@ -2,7 +2,7 @@
 const util = require('util');
 const fs = require('fs');
 const chalk = require('chalk');
-const Jimp = require('@sindresorhus/jimp');
+const Jimp = require('jimp');
 const termImg = require('term-img');
 
 const PIXEL = '\u2584';
