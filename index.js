@@ -4,6 +4,10 @@ const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('jimp');
 const termImg = require('term-img');
+const decodeGif = require('decode-gif');
+const logUpdate = require('log-update');
+const Cycled = require('cycled');
+const delay = require('delay');
 
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
@@ -32,8 +36,8 @@ function checkAndGetDimensionValue(value, percentageBase) {
 }
 
 function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
-	const terminalColumns = process.stdout.columns || 80;
-	const terminalRows = process.stdout.rows || 24;
+	const terminalColumns = process.stdout.columns - 2 || 80;
+	const terminalRows = process.stdout.rows - 2 || 24;
 
 	let width;
 	let height;
@@ -100,5 +104,53 @@ exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspect
 	});
 };
 
-exports.file = async (filePath, options = {}) =>
-	exports.buffer(await readFile(filePath), options);
+exports.file = async (filePath, options = {}) => exports.buffer(await readFile(filePath), options);
+
+exports.gifBuffer = (buffer, options = {}) => {
+	options = {
+		updateLog: logUpdate,
+		...options
+	};
+
+	const {width, height, frames: gifFrames} = decodeGif(buffer);
+
+	let image;
+	const renderGifFrame = async ({data, width, height}) => {
+		if (!image) {
+			image = await Jimp.create(width, height);
+		}
+
+		for (let x = 0; x < width; x++) {
+			for (let y = 0; y < height; y++) {
+				const dataIndex = (y * width * 4) + (x * 4);
+				if (!(data[dataIndex] === 0 && data[dataIndex + 1] === 0 && data[dataIndex + 2] === 0 && data[dataIndex + 3] === 0)) {
+					image.setPixelColour(Jimp.rgbaToInt(data[dataIndex], data[dataIndex + 1], data[dataIndex + 2], data[dataIndex + 3]), x, y);
+				}
+			}
+		}
+
+		return image.getBufferAsync(Jimp.MIME_PNG);
+	};
+
+	const frames = new Cycled(gifFrames);
+	let continueAnimation = true;
+	const animateFrame = async () => {
+		options.updateLog(await exports.buffer(await renderGifFrame({data: frames.current().data, width, height}), options));
+		await delay(frames.current().timeCode - frames.previous().timeCode);
+		frames.step(2);
+		if (continueAnimation) {
+			await animateFrame();
+		}
+	};
+
+	animateFrame();
+
+	return () => {
+		continueAnimation = false;
+		if (options.updateLog.done) {
+			options.updateLog.done();
+		}
+	};
+};
+
+exports.gifFile = (filePath, options = {}) => exports.gifBuffer(fs.readFileSync(filePath), options);

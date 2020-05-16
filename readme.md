@@ -58,54 +58,14 @@ const terminalImage = require('terminal-image');
 
 ## API
 
-Supports PNG and JPEG images.
+Supports PNG and JPEG images. Gifs are also supported with `terminalImage.gifBuffer` and `terminalImage.gifFile`.
 
 ### terminalImage.buffer(imageBuffer, options?)
-
-Returns a `Promise<string>` with the ansi escape codes to display the image.
-
-##### options
-
-Type: `object`
-
-###### height
-
-Type: `string | number`
-
-Custom image height.
-
-Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
-
-###### width
-
-Type: `string | number`
-
-Custom image width.
-
-Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
-
-###### preserveAspectRatio
-
-Type: `boolean`\
-Default: `true`
-
-Whether to maintain image aspect ratio or not.
-
-#### imageBuffer
-
-Type: `Buffer`
-
-Buffer with the image.
-
 ### terminalImage.file(filePath, options?)
+### terminalImage.gifBuffer(imageBuffer, options?)
+### terminalImage.gifFile(filePath, options?)
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
-
-#### filePath
-
-Type: `string`
-
-File path to the image.
 
 ##### options
 
@@ -133,6 +93,24 @@ Type: `boolean`\
 Default: `true`
 
 Whether to maintain image aspect ratio or not.
+
+###### updateLog
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `(text: string) => void`\
+Default: [log-update](https://github.com/sindresorhus/log-update)
+
+Custom handler which is run for each frame of the gif.
+
+###### updateLog.done
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `() => void`\
+Default: [log-update](https://github.com/sindresorhus/log-update)
+
+Custom handler which is run when the animation playback is stopped.
 
 ## Tip
 

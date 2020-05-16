@@ -41,8 +41,12 @@
 		"pixels"
 	],
 	"dependencies": {
-		"jimp": "^0.10.3",
 		"chalk": "^4.0.0",
+		"cycled": "^1.1.0",
+		"decode-gif": "^1.0.0",
+		"delay": "^4.3.0",
+		"jimp": "^0.10.3",
+		"log-update": "^4.0.0",
 		"term-img": "^4.1.0"
 	},
 	"devDependencies": {
