@@ -95,7 +95,7 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 }
 
 exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
-	return termImg.string(buffer, {
+	return termImg(buffer, {
 		width,
 		height,
 		fallback: () => render(buffer, {height, width, preserveAspectRatio})
@@ -116,7 +116,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 		}
 	};
 
-	const result = termImg.string(buffer, {
+	const result = termImg(buffer, {
 		width: options.width,
 		height: options.height,
 		fallback: () => false
