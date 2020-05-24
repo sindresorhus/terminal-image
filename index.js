@@ -8,6 +8,7 @@ const decodeGif = require('decode-gif');
 const logUpdate = require('log-update');
 const Cycled = require('cycled');
 const delay = require('delay');
+const debounceFunction = require('debounce-fn');
 
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
@@ -134,7 +135,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 
 	const frames = new Cycled(gifFrames);
 	let continueAnimation = true;
-	const animateFrame = async () => {
+	let animateFrame = async () => {
 		options.updateLog(await exports.buffer(await renderGifFrame({data: frames.current().data, width, height}), options));
 		await delay(frames.current().timeCode - frames.previous().timeCode);
 		frames.step(2);
@@ -142,6 +143,10 @@ exports.gifBuffer = (buffer, options = {}) => {
 			await animateFrame();
 		}
 	};
+
+	if (options.maximumFramerate) {
+		animateFrame = debounceFunction(animateFrame, {wait: 1000 / options.maximumFramerate});
+	}
 
 	animateFrame();
 

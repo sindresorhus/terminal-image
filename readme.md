@@ -94,6 +94,15 @@ Default: `true`
 
 Whether to maintain image aspect ratio or not.
 
+###### maximumFramerate
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `number`\
+Default: `Infinity`
+
+Maximum framerate to render the GIF.
+
 ###### updateLog
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
