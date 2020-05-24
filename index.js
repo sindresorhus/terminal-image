@@ -4,11 +4,8 @@ const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('jimp');
 const termImg = require('term-img');
-const decodeGif = require('decode-gif');
+const renderGif = require('render-gif');
 const logUpdate = require('log-update');
-const Cycled = require('cycled');
-const delay = require('delay');
-const debounceFunction = require('debounce-fn');
 
 const PIXEL = '\u2584';
 const readFile = util.promisify(fs.readFile);
@@ -97,52 +94,6 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 	return result;
 }
 
-function renderGif(buffer, options = {}) {
-	const {width, height, frames: gifFrames} = decodeGif(buffer);
-
-	let image;
-	const renderGifFrame = async ({data, width, height}) => {
-		if (!image) {
-			image = await Jimp.create(width, height);
-		}
-
-		for (let x = 0; x < width; x++) {
-			for (let y = 0; y < height; y++) {
-				const dataIndex = (y * width * 4) + (x * 4);
-				if (!(data[dataIndex] === 0 && data[dataIndex + 1] === 0 && data[dataIndex + 2] === 0 && data[dataIndex + 3] === 0)) {
-					image.setPixelColour(Jimp.rgbaToInt(data[dataIndex], data[dataIndex + 1], data[dataIndex + 2], data[dataIndex + 3]), x, y);
-				}
-			}
-		}
-
-		return image.getBufferAsync(Jimp.MIME_PNG);
-	};
-
-	const frames = new Cycled(gifFrames);
-	let continueAnimation = true;
-	let animateFrame = async () => {
-		options.updateLog(await exports.buffer(await renderGifFrame({data: frames.current().data, width, height}), options));
-		await delay(frames.current().timeCode - frames.previous().timeCode);
-		frames.step(2);
-		if (continueAnimation) {
-			await animateFrame();
-		}
-	};
-
-	if (options.maximumFramerate) {
-		animateFrame = debounceFunction(animateFrame, {wait: 1000 / options.maximumFramerate});
-	}
-
-	animateFrame();
-
-	return () => {
-		continueAnimation = false;
-		if (options.updateLog.done) {
-			options.updateLog.done();
-		}
-	};
-}
-
 exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
 	return termImg.string(buffer, {
 		width,
@@ -170,7 +121,13 @@ exports.gifBuffer = (buffer, options = {}) => {
 		return () => {};
 	}
 
-	return renderGif(buffer, options);
+	const animation = renderGif(buffer, async frameData => {
+		options.updateLog(await exports.buffer(Buffer.from(frameData), options));
+	}, options);
+
+	return () => {
+		animation.playing = false;
+	};
 };
 
 exports.gifFile = (filePath, options = {}) => exports.gifBuffer(fs.readFileSync(filePath), options);
