@@ -84,7 +84,7 @@ declare const terminalImage: {
 	) => Promise<string>;
 
 	/**
-	Display gifs in the terminal.
+	Display GIFs in the terminal.
 
 	Optionally, you can specify the height and/or width to scale the image.
 	That can be either the percentage of the terminal window or number of rows and/or columns.
