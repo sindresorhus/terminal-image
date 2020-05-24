@@ -97,22 +97,7 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 	return result;
 }
 
-exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
-	return termImg.string(buffer, {
-		width,
-		height,
-		fallback: () => render(buffer, {height, width, preserveAspectRatio})
-	});
-};
-
-exports.file = async (filePath, options = {}) => exports.buffer(await readFile(filePath), options);
-
-exports.gifBuffer = (buffer, options = {}) => {
-	options = {
-		updateLog: logUpdate,
-		...options
-	};
-
+function renderGif(buffer, options = {}) {
 	const {width, height, frames: gifFrames} = decodeGif(buffer);
 
 	let image;
@@ -156,6 +141,36 @@ exports.gifBuffer = (buffer, options = {}) => {
 			options.updateLog.done();
 		}
 	};
+}
+
+exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
+	return termImg.string(buffer, {
+		width,
+		height,
+		fallback: () => render(buffer, {height, width, preserveAspectRatio})
+	});
+};
+
+exports.file = async (filePath, options = {}) => exports.buffer(await readFile(filePath), options);
+
+exports.gifBuffer = (buffer, options = {}) => {
+	options = {
+		updateLog: logUpdate,
+		...options
+	};
+
+	const result = termImg.string(buffer, {
+		width: options.width,
+		height: options.height,
+		fallback: () => false
+	});
+
+	if (result) {
+		options.updateLog(result);
+		return () => {};
+	}
+
+	return renderGif(buffer, options);
 };
 
 exports.gifFile = (filePath, options = {}) => exports.gifBuffer(fs.readFileSync(filePath), options);
