@@ -110,6 +110,12 @@ exports.gifBuffer = (buffer, options = {}) => {
 		...options
 	};
 
+	const finalize = () => {
+		if (options.updateLog.done) {
+			options.updateLog.done();
+		}
+	};
+
 	const result = termImg.string(buffer, {
 		width: options.width,
 		height: options.height,
@@ -118,7 +124,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 
 	if (result) {
 		options.updateLog(result);
-		return () => {};
+		return finalize;
 	}
 
 	const animation = renderGif(buffer, async frameData => {
@@ -127,6 +133,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 
 	return () => {
 		animation.playing = false;
+		finalize();
 	};
 };
 
