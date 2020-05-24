@@ -58,7 +58,7 @@ const terminalImage = require('terminal-image');
 
 ## API
 
-Supports PNG and JPEG images. Gifs are also supported with `terminalImage.gifBuffer` and `terminalImage.gifFile`.
+Supports PNG and JPEG images. Animated GIFs are also supported with `.gifBuffer` and `.gifFile`.
 
 ### terminalImage.buffer(imageBuffer, options?)
 ### terminalImage.file(filePath, options?)
