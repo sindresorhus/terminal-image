@@ -43,7 +43,7 @@
 	"dependencies": {
 		"jimp": "^0.10.3",
 		"chalk": "^4.0.0",
-		"term-img": "^4.1.0"
+		"term-img": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^13.13.5",
