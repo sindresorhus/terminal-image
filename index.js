@@ -102,7 +102,8 @@ exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspect
 	});
 };
 
-exports.file = async (filePath, options = {}) => exports.buffer(await readFile(filePath), options);
+exports.file = async (filePath, options = {}) =>
+	exports.buffer(await readFile(filePath), options);
 
 exports.gifBuffer = (buffer, options = {}) => {
 	options = {
