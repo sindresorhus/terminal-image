@@ -138,4 +138,5 @@ exports.gifBuffer = (buffer, options = {}) => {
 	};
 };
 
-exports.gifFile = (filePath, options = {}) => exports.gifBuffer(fs.readFileSync(filePath), options);
+exports.gifFile = (filePath, options = {}) =>
+	exports.gifBuffer(fs.readFileSync(filePath), options);
