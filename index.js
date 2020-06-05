@@ -1,5 +1,5 @@
 'use strict';
-const util = require('util');
+const {promisify} = require('util');
 const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('jimp');
@@ -8,7 +8,7 @@ const renderGif = require('render-gif');
 const logUpdate = require('log-update');
 
 const PIXEL = '\u2584';
-const readFile = util.promisify(fs.readFile);
+const readFile = promisify(fs.readFile);
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
