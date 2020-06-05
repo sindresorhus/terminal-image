@@ -94,7 +94,7 @@ Default: `true`
 
 Whether to maintain image aspect ratio or not.
 
-###### maximumFramerate
+###### maximumFrameRate
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 

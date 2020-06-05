@@ -133,7 +133,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 	}, options);
 
 	return () => {
-		animation.playing = false;
+		animation.isPlaying = false;
 		finalize();
 	};
 };

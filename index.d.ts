@@ -101,7 +101,7 @@ declare const terminalImage: {
 	@param options - Image rendering options.
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
-	@param options.maximumFramerate - Optional: Maximum framerate to render the GIF.
+	@param options.maximumFrameRate - Optional: Maximum framerate to render the GIF.
 	@param options.renderFrame - Optional: Custom handler which is run for each frame of the gif.
 	@param options.renderFrame.done - Optional: Custom handler which is run when the animation playback is stopped.
 	@returns A function that can be called to stop the gif animation.
@@ -124,7 +124,7 @@ declare const terminalImage: {
 	gifBuffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
 		width?: number;
 		height?: number;
-		maximumFramerate?: number;
+		maximumFrameRate?: number;
 		renderFrame?: typeof terminalImage.RenderFrame;
 	}>) => () => void;
 
@@ -144,7 +144,7 @@ declare const terminalImage: {
 	@param options - Image rendering options.
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
-	@param options.maximumFramerate - Optional: Maximum framerate to render the GIF.
+	@param options.maximumFrameRate - Optional: Maximum framerate to render the GIF.
 	@param options.renderFrame - Optional: Custom handler which is run for each frame of the gif.
 	@param options.renderFrame.done - Optional: Custom handler which is run when the animation playback is stopped.
 	@returns A function that can be called to stop the gif animation.
@@ -167,7 +167,7 @@ declare const terminalImage: {
 		options?: Readonly<{
 			width?: number;
 			height?: number;
-			maximumFramerate?: number;
+			maximumFrameRate?: number;
 			renderFrame?: typeof terminalImage.RenderFrame;
 		}>
 	) => () => void;
