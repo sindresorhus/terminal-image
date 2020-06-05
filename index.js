@@ -107,13 +107,13 @@ exports.file = async (filePath, options = {}) =>
 
 exports.gifBuffer = (buffer, options = {}) => {
 	options = {
-		updateLog: logUpdate,
+		renderFrame: logUpdate,
 		...options
 	};
 
 	const finalize = () => {
-		if (options.updateLog.done) {
-			options.updateLog.done();
+		if (options.renderFrame.done) {
+			options.renderFrame.done();
 		}
 	};
 
@@ -124,12 +124,12 @@ exports.gifBuffer = (buffer, options = {}) => {
 	});
 
 	if (result) {
-		options.updateLog(result);
+		options.renderFrame(result);
 		return finalize;
 	}
 
 	const animation = renderGif(buffer, async frameData => {
-		options.updateLog(await exports.buffer(Buffer.from(frameData), options));
+		options.renderFrame(await exports.buffer(Buffer.from(frameData), options));
 	}, options);
 
 	return () => {

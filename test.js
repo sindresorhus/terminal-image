@@ -16,7 +16,7 @@ test('.file()', async t => {
 test('.gifBuffer()', async t => {
 	let result = '';
 	const stopAnimation = terminalImage.gifBuffer(fs.readFileSync('fixture.gif'), {
-		updateLog: text => {
+		renderFrame: text => {
 			result += text;
 		}
 	});
@@ -28,7 +28,7 @@ test('.gifBuffer()', async t => {
 test('.gifFile()', async t => {
 	let result = '';
 	const stopAnimation = terminalImage.gifFile('fixture.gif', {
-		updateLog: text => {
+		renderFrame: text => {
 			result += text;
 		}
 	});

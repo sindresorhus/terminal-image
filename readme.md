@@ -103,7 +103,7 @@ Default: `Infinity`
 
 Maximum framerate to render the GIF.
 
-###### updateLog
+###### renderFrame
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
@@ -112,7 +112,7 @@ Default: [log-update](https://github.com/sindresorhus/log-update)
 
 Custom handler which is run for each frame of the gif.
 
-###### updateLog.done
+###### renderFrame.done
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
