@@ -1,7 +1,7 @@
 /// <reference types="node"/>
 
 declare namespace terminalImage {
-	export const RenderFrame: {
+	export type RenderFrame = {
 		done?: () => void;
 		(text: string): void;
 	};
@@ -125,7 +125,7 @@ declare const terminalImage: {
 		width?: number;
 		height?: number;
 		maximumFrameRate?: number;
-		renderFrame?: typeof terminalImage.RenderFrame;
+		renderFrame?: terminalImage.RenderFrame;
 	}>) => () => void;
 
 	/**
@@ -168,7 +168,7 @@ declare const terminalImage: {
 			width?: number;
 			height?: number;
 			maximumFrameRate?: number;
-			renderFrame?: typeof terminalImage.RenderFrame;
+			renderFrame?: terminalImage.RenderFrame;
 		}>
 	) => () => void;
 };
