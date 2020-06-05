@@ -110,7 +110,7 @@ declare const terminalImage: {
 	```
 	import terminalImage = require('terminal-image');
 	import delay = require('delay');
-	const fs = require('fs').promises;
+	const {promises: fs} = require('fs');
 
 	(async () => {
 	const gifData = await fs.readFile('unicorn.gif');
