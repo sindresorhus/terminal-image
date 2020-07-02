@@ -33,11 +33,14 @@ declare const terminalImage: {
 	})();
 	```
 	*/
-	buffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
-		width?: number;
-		height?: number;
-		preserveAspectRatio?: boolean;
-	}>) => Promise<string>;
+	buffer: (
+		imageBuffer: Readonly<Buffer>,
+		options?: Readonly<{
+			width?: string | number;
+			height?: string | number;
+			preserveAspectRatio?: boolean;
+		}>
+	) => Promise<string>;
 
 	/**
 	Display images in the terminal. Please note that the image will always be scaled to fit the size of the terminal.
@@ -72,8 +75,8 @@ declare const terminalImage: {
 	file: (
 		filePath: string,
 		options?: Readonly<{
-			width?: number;
-			height?: number;
+			width?: string | number;
+			height?: string | number;
 			preserveAspectRatio?: boolean;
 		}>
 	) => Promise<string>;
