@@ -7,8 +7,9 @@ const termImg = require('term-img');
 const renderGif = require('render-gif');
 const logUpdate = require('log-update');
 
-// Log-update adds an extra newline so the generated frames need to be 2 pixels shorter
+// `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
+
 const PIXEL = '\u2584';
 const readFile = promisify(fs.readFile);
 
