@@ -110,7 +110,7 @@ Maximum framerate to render the GIF.
 Type: `(text: string) => void`\
 Default: [log-update](https://github.com/sindresorhus/log-update)
 
-Custom handler which is run for each frame of the gif.
+Custom handler which is run for each frame of the GIF.
 
 ###### renderFrame.done
 
