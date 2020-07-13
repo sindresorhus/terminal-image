@@ -95,7 +95,7 @@ declare const terminalImage: {
 	It is recommended to use the percentage option.
 	You can set width and/or height as columns and/or rows of the terminal window as well.
 	By default, aspect ratio is always maintained. If you don't want to maintain aspect ratio, set preserveAspectRatio to false.
-	Each frame of the gif is by default logged to the terminal, overwriting the previous one. To change this behaviour, set renderFrame to a different function. To change the code run when the animation playback is stopped, set renderFrame.done to a different function.
+	Each frame of the GIF is by default printed to the terminal, overwriting the previous one. To change this behavior, set `renderFrame` to a different function. To change the code run when the animation playback is stopped, set `renderFrame.done` to a different function.
 
 	@param imageBuffer - Buffer with the image.
 	@param options - Image rendering options.
