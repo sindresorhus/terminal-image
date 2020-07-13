@@ -104,7 +104,7 @@ declare const terminalImage: {
 	@param options.maximumFrameRate - Optional: Maximum framerate to render the GIF.
 	@param options.renderFrame - Optional: Custom handler which is run for each frame of the gif.
 	@param options.renderFrame.done - Optional: Custom handler which is run when the animation playback is stopped.
-	@returns A function that can be called to stop the gif animation.
+	@returns A function that can be called to stop the GIF animation.
 
 	@example
 	```
