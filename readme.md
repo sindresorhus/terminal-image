@@ -101,7 +101,7 @@ Whether to maintain image aspect ratio or not.
 Type: `number`\
 Default: `Infinity`
 
-Maximum framerate to render the GIF.
+Maximum framerate to render the GIF. This option is ignored when using iTerm.
 
 ###### renderFrame
 
