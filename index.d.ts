@@ -113,11 +113,11 @@ declare const terminalImage: {
 	const {promises: fs} = require('fs');
 
 	(async () => {
-	const gifData = await fs.readFile('unicorn.gif');
-	const stopAnimation = terminalImage.gifBuffer(gifData)
+		const gifData = await fs.readFile('unicorn.gif');
+		const stopAnimation = terminalImage.gifBuffer(gifData);
 
-	await delay(5000)
-	stopAnimation()
+		await delay(5000);
+		stopAnimation();
 	})();
 	```
 	*/
@@ -155,10 +155,10 @@ declare const terminalImage: {
 	import delay = require('delay');
 
 	(async () => {
-	const stopAnimation = terminalImage.gifFile('unicorn.gif')
+		const stopAnimation = terminalImage.gifFile('unicorn.gif');
 
-	await delay(5000)
-	stopAnimation()
+		await delay(5000);
+		stopAnimation();
 	})();
 	```
 	*/
