@@ -102,7 +102,7 @@ declare const terminalImage: {
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.maximumFrameRate - Optional: Maximum framerate to render the GIF.
-	@param options.renderFrame - Optional: Custom handler which is run for each frame of the gif.
+	@param options.renderFrame - Optional: Custom handler which is run for each frame of the GIF.
 	@param options.renderFrame.done - Optional: Custom handler which is run when the animation playback is stopped.
 	@returns A function that can be called to stop the GIF animation.
 
