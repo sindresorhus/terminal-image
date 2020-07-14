@@ -98,8 +98,8 @@ Whether to maintain image aspect ratio or not.
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
-Type: `number`\
-Default: `Infinity`
+Type: `number | Infinity`\
+Default: `60`
 
 Maximum framerate to render the GIF. This option is ignored when using iTerm.
 
