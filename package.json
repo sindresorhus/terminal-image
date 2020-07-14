@@ -40,7 +40,8 @@
 		"show",
 		"pixels",
 		"gif",
-		"animation"
+		"animation",
+		"sequence"
 	],
 	"dependencies": {
 		"chalk": "^4.0.0",
