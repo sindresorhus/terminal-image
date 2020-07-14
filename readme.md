@@ -67,11 +67,11 @@ Supports PNG and JPEG images. Animated GIFs are also supported with `.gifBuffer`
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
-##### options
+#### options
 
 Type: `object`
 
-###### height
+##### height
 
 Type: `string | number`
 
@@ -79,7 +79,7 @@ Custom image height.
 
 Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 
-###### width
+##### width
 
 Type: `string | number`
 
@@ -87,14 +87,14 @@ Custom image width.
 
 Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 
-###### preserveAspectRatio
+##### preserveAspectRatio
 
 Type: `boolean`\
 Default: `true`
 
 Whether to maintain image aspect ratio or not.
 
-###### maximumFrameRate
+##### maximumFrameRate
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
@@ -103,7 +103,7 @@ Default: `Infinity`
 
 Maximum framerate to render the GIF.
 
-###### renderFrame
+##### renderFrame
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
@@ -112,7 +112,7 @@ Default: [log-update](https://github.com/sindresorhus/log-update)
 
 Custom handler which is run for each frame of the gif.
 
-###### renderFrame.done
+##### renderFrame.done
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
