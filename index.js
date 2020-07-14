@@ -7,6 +7,9 @@ const termImg = require('term-img');
 const renderGif = require('render-gif');
 const logUpdate = require('log-update');
 
+// `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
+const ROW_OFFSET = 2;
+
 const PIXEL = '\u2584';
 const readFile = promisify(fs.readFile);
 
@@ -34,8 +37,8 @@ function checkAndGetDimensionValue(value, percentageBase) {
 }
 
 function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
-	const terminalColumns = process.stdout.columns - 2 || 80;
-	const terminalRows = process.stdout.rows - 2 || 24;
+	const terminalColumns = process.stdout.columns || 80;
+	const terminalRows = process.stdout.rows - ROW_OFFSET || 24;
 
 	let width;
 	let height;
@@ -108,6 +111,7 @@ exports.file = async (filePath, options = {}) =>
 exports.gifBuffer = (buffer, options = {}) => {
 	options = {
 		renderFrame: logUpdate,
+		maximumFrameRate: 60,
 		...options
 	};
 

@@ -38,7 +38,9 @@
 		"jpeg",
 		"display",
 		"show",
-		"pixels"
+		"pixels",
+		"gif",
+		"animation"
 	],
 	"dependencies": {
 		"chalk": "^4.0.0",

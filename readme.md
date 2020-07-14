@@ -98,10 +98,10 @@ Whether to maintain image aspect ratio or not.
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
 
-Type: `number`\
-Default: `Infinity`
+Type: `number | Infinity`\
+Default: `60`
 
-Maximum framerate to render the GIF.
+Maximum framerate to render the GIF. This option is ignored when using iTerm.
 
 ##### renderFrame
 
@@ -110,7 +110,7 @@ Maximum framerate to render the GIF.
 Type: `(text: string) => void`\
 Default: [log-update](https://github.com/sindresorhus/log-update)
 
-Custom handler which is run for each frame of the gif.
+Custom handler which is run for each frame of the GIF.
 
 ##### renderFrame.done
 
