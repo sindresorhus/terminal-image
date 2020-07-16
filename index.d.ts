@@ -2,12 +2,15 @@
 
 declare namespace terminalImage {
 	export type RenderFrame = {
-		/** Custom handler which is run when the animation playback is stopped. */
+		/**
+		Custom handler which is run when the animation playback is stopped.
+		*/
 		done?: () => void;
 
 		/**
 		Custom handler which is run for each frame of the GIF.
-		@param text The frame which should be rendered.
+
+		@param text - The frame which should be rendered.
 		*/
 		(text: string): void;
 	};
