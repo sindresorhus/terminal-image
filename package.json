@@ -41,8 +41,8 @@
 		"pixels"
 	],
 	"dependencies": {
-		"jimp": "^0.10.3",
 		"chalk": "^4.0.0",
+		"jimp": "^0.14.0",
 		"term-img": "^5.0.0"
 	},
 	"devDependencies": {
