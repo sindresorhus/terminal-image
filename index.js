@@ -111,7 +111,7 @@ exports.file = async (filePath, options = {}) =>
 exports.gifBuffer = (buffer, options = {}) => {
 	options = {
 		renderFrame: logUpdate,
-		maximumFrameRate: 60,
+		maximumFrameRate: 30,
 		...options
 	};
 
