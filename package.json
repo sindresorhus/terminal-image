@@ -1,6 +1,6 @@
 {
 	"name": "terminal-image",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Display images in the terminal",
 	"license": "MIT",
 	"repository": "sindresorhus/terminal-image",
@@ -45,7 +45,7 @@
 	],
 	"dependencies": {
 		"chalk": "^4.0.0",
-		"jimp": "^0.10.3",
+		"jimp": "^0.14.0",
 		"log-update": "^4.0.0",
 		"render-gif": "^2.0.3",
 		"term-img": "^5.0.0"

@@ -54,8 +54,8 @@ declare const terminalImage: {
 	```
 	*/
 	buffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
-		width?: number;
-		height?: number;
+		width?: string | number;
+		height?: string | number;
 		preserveAspectRatio?: boolean;
 	}>) => Promise<string>;
 
@@ -92,8 +92,8 @@ declare const terminalImage: {
 	file: (
 		filePath: string,
 		options?: Readonly<{
-			width?: number;
-			height?: number;
+			width?: string | number;
+			height?: string | number;
 			preserveAspectRatio?: boolean;
 		}>
 	) => Promise<string>;

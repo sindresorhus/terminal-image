@@ -42,7 +42,7 @@ You can set width and/or height as columns and/or rows of the terminal window as
 const terminalImage = require('terminal-image');
 
 (async () => {
-	console.log(await terminalImage.file('unicorn.jpg', {width: 50 }));
+	console.log(await terminalImage.file('unicorn.jpg', {width: 50}));
 })();
 ```
 
