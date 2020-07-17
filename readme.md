@@ -112,6 +112,8 @@ Default: [log-update](https://github.com/sindresorhus/log-update)
 
 Custom handler which is run for each frame of the GIF.
 
+This can be set to change how each frame is shown.
+
 ##### renderFrame.done
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
@@ -120,6 +122,8 @@ Type: `() => void`\
 Default: [log-update](https://github.com/sindresorhus/log-update)
 
 Custom handler which is run when the animation playback is stopped.
+
+This can be set to perform a cleanup when playback has finished.
 
 ## Tip
 
