@@ -47,7 +47,7 @@
 		"chalk": "^4.0.0",
 		"jimp": "^0.14.0",
 		"log-update": "^4.0.0",
-		"render-gif": "^2.0.3",
+		"render-gif": "^2.0.4",
 		"term-img": "^5.0.0"
 	},
 	"devDependencies": {
