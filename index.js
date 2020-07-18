@@ -1,12 +1,17 @@
 'use strict';
-const util = require('util');
+const {promisify} = require('util');
 const fs = require('fs');
 const chalk = require('chalk');
 const Jimp = require('jimp');
 const termImg = require('term-img');
+const renderGif = require('render-gif');
+const logUpdate = require('log-update');
+
+// `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
+const ROW_OFFSET = 2;
 
 const PIXEL = '\u2584';
-const readFile = util.promisify(fs.readFile);
+const readFile = promisify(fs.readFile);
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
@@ -33,7 +38,7 @@ function checkAndGetDimensionValue(value, percentageBase) {
 
 function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
 	const terminalColumns = process.stdout.columns || 80;
-	const terminalRows = process.stdout.rows || 24;
+	const terminalRows = process.stdout.rows - ROW_OFFSET || 24;
 
 	let width;
 	let height;
@@ -102,3 +107,40 @@ exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspect
 
 exports.file = async (filePath, options = {}) =>
 	exports.buffer(await readFile(filePath), options);
+
+exports.gifBuffer = (buffer, options = {}) => {
+	options = {
+		renderFrame: logUpdate,
+		maximumFrameRate: 30,
+		...options
+	};
+
+	const finalize = () => {
+		if (options.renderFrame.done) {
+			options.renderFrame.done();
+		}
+	};
+
+	const result = termImg(buffer, {
+		width: options.width,
+		height: options.height,
+		fallback: () => false
+	});
+
+	if (result) {
+		options.renderFrame(result);
+		return finalize;
+	}
+
+	const animation = renderGif(buffer, async frameData => {
+		options.renderFrame(await exports.buffer(Buffer.from(frameData), options));
+	}, options);
+
+	return () => {
+		animation.isPlaying = false;
+		finalize();
+	};
+};
+
+exports.gifFile = (filePath, options = {}) =>
+	exports.gifBuffer(fs.readFileSync(filePath), options);

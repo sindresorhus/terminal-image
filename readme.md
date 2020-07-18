@@ -58,60 +58,20 @@ const terminalImage = require('terminal-image');
 
 ## API
 
-Supports PNG and JPEG images.
+Supports PNG and JPEG images. Animated GIFs are also supported with `.gifBuffer` and `.gifFile`.
 
 ### terminalImage.buffer(imageBuffer, options?)
-
-Returns a `Promise<string>` with the ansi escape codes to display the image.
-
-##### options
-
-Type: `object`
-
-###### height
-
-Type: `string | number`
-
-Custom image height.
-
-Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
-
-###### width
-
-Type: `string | number`
-
-Custom image width.
-
-Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
-
-###### preserveAspectRatio
-
-Type: `boolean`\
-Default: `true`
-
-Whether to maintain image aspect ratio or not.
-
-#### imageBuffer
-
-Type: `Buffer`
-
-Buffer with the image.
-
 ### terminalImage.file(filePath, options?)
+### terminalImage.gifBuffer(imageBuffer, options?)
+### terminalImage.gifFile(filePath, options?)
 
 Returns a `Promise<string>` with the ansi escape codes to display the image.
 
-#### filePath
-
-Type: `string`
-
-File path to the image.
-
-##### options
+#### options
 
 Type: `object`
 
-###### height
+##### height
 
 Type: `string | number`
 
@@ -119,7 +79,7 @@ Custom image height.
 
 Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 
-###### width
+##### width
 
 Type: `string | number`
 
@@ -127,12 +87,43 @@ Custom image width.
 
 Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 
-###### preserveAspectRatio
+##### preserveAspectRatio
 
 Type: `boolean`\
 Default: `true`
 
 Whether to maintain image aspect ratio or not.
+
+##### maximumFrameRate
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `number`\
+Default: `30`
+
+Maximum framerate to render the GIF. This option is ignored when using iTerm.
+
+##### renderFrame
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `(text: string) => void`\
+Default: [log-update](https://github.com/sindresorhus/log-update)
+
+Custom handler which is run for each frame of the GIF.
+
+This can be set to change how each frame is shown.
+
+##### renderFrame.done
+
+**Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
+
+Type: `() => void`\
+Default: [log-update](https://github.com/sindresorhus/log-update)
+
+Custom handler which is run when the animation playback is stopped.
+
+This can be set to perform a cleanup when playback has finished.
 
 ## Tip
 
