@@ -1,6 +1,6 @@
 {
 	"name": "terminal-image",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Display images in the terminal",
 	"license": "MIT",
 	"repository": "sindresorhus/terminal-image",
