@@ -135,8 +135,8 @@ declare const terminalImage: {
 	```
 	*/
 	gifBuffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
-		width?: number;
-		height?: number;
+		width?: string | number;
+		height?: string | number;
 		maximumFrameRate?: number;
 		renderFrame?: terminalImage.RenderFrame;
 	}>) => () => void;
@@ -178,8 +178,8 @@ declare const terminalImage: {
 	gifFile: (
 		filePath: string,
 		options?: Readonly<{
-			width?: number;
-			height?: number;
+			width?: string | number;
+			height?: string | number;
 			maximumFrameRate?: number;
 			renderFrame?: terminalImage.RenderFrame;
 		}>
