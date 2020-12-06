@@ -68,7 +68,7 @@ Returns a `Promise<string>` with the ansi escape codes to display the image.
 ### terminalImage.gifBuffer(imageBuffer, options?)
 ### terminalImage.gifFile(filePath, options?)
 
-Returns a function that stops gif playback when called.
+A function that can be called to stop the GIF animation.
 
 #### options
 
