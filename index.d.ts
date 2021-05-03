@@ -1,24 +1,20 @@
-/// <reference types="node"/>
+export type RenderFrame = {
+	/**
+	Custom handler which is run when the animation playback is stopped.
 
-declare namespace terminalImage {
-	export type RenderFrame = {
-		/**
-		Custom handler which is run when the animation playback is stopped.
+	This can be set to perform a cleanup when playback has finished.
+	*/
+	done?: () => void;
 
-		This can be set to perform a cleanup when playback has finished.
-		*/
-		done?: () => void;
+	/**
+	Custom handler which is run for each frame of the GIF.
 
-		/**
-		Custom handler which is run for each frame of the GIF.
+	This can be set to change how each frame is shown.
 
-		This can be set to change how each frame is shown.
-
-		@param text - The frame which should be rendered.
-		*/
-		(text: string): void;
-	};
-}
+	@param text - The frame which should be rendered.
+	*/
+	(text: string): void;
+};
 
 declare const terminalImage: {
 	/**
@@ -41,16 +37,14 @@ declare const terminalImage: {
 
 	@example
 	```
-	import terminalImage = require('terminal-image');
-	import got = require('got');
+	import terminalImage from 'terminal-image';
+	import got from 'got';
 
-	(async () => {
-		const body = await got('https://sindresorhus.com/unicorn').buffer();
-		console.log(await terminalImage.buffer(body));
-		console.log(await terminalImage.buffer(body, {width: '50%', height: '50%'}));
-		console.log(await terminalImage.buffer(body, {width: 50 }));
-		console.log(await terminalImage.buffer(body, {width: 70, height: 50, preserveAspectRatio: false}));
-	})();
+	const body = await got('https://sindresorhus.com/unicorn').buffer();
+	console.log(await terminalImage.buffer(body));
+	console.log(await terminalImage.buffer(body, {width: '50%', height: '50%'}));
+	console.log(await terminalImage.buffer(body, {width: 50 }));
+	console.log(await terminalImage.buffer(body, {width: 70, height: 50, preserveAspectRatio: false}));
 	```
 	*/
 	buffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
@@ -79,14 +73,12 @@ declare const terminalImage: {
 
 	@example
 	```
-	const terminalImage = require('terminal-image');
+	import terminalImage from 'terminal-image';
 
-	(async () => {
-		console.log(await terminalImage.file('unicorn.jpg'));
-		console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
-		console.log(await terminalImage.file('unicorn.jpg', {width: 50 }));
-		console.log(await terminalImage.file('unicorn.jpg', {width: 70, height: 50, preserveAspectRatio: false}));
-	})();
+	console.log(await terminalImage.file('unicorn.jpg'));
+	console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
+	console.log(await terminalImage.file('unicorn.jpg', {width: 50 }));
+	console.log(await terminalImage.file('unicorn.jpg', {width: 70, height: 50, preserveAspectRatio: false}));
 	```
 	*/
 	file: (
@@ -121,24 +113,22 @@ declare const terminalImage: {
 
 	@example
 	```
-	import terminalImage = require('terminal-image');
-	import delay = require('delay');
-	const {promises: fs} = require('fs');
+	import {setTimeout} from 'node:timers/promises';
+	import fs from 'node:fs/promises';
+	import terminalImage from 'terminal-image';
 
-	(async () => {
-		const gifData = await fs.readFile('unicorn.gif');
-		const stopAnimation = terminalImage.gifBuffer(gifData);
+	const gifData = await fs.readFile('unicorn.gif');
+	const stopAnimation = terminalImage.gifBuffer(gifData);
 
-		await delay(5000);
-		stopAnimation();
-	})();
+	await delay(5000);
+	stopAnimation();
 	```
 	*/
 	gifBuffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
 		width?: string | number;
 		height?: string | number;
 		maximumFrameRate?: number;
-		renderFrame?: terminalImage.RenderFrame;
+		renderFrame?: RenderFrame;
 	}>) => () => void;
 
 	/**
@@ -164,15 +154,13 @@ declare const terminalImage: {
 
 	@example
 	```
-	import terminalImage = require('terminal-image');
-	import delay = require('delay');
+	import {setTimeout} from 'node:timers/promises';
+	import terminalImage from 'terminal-image';
 
-	(async () => {
-		const stopAnimation = terminalImage.gifFile('unicorn.gif');
+	const stopAnimation = terminalImage.gifFile('unicorn.gif');
 
-		await delay(5000);
-		stopAnimation();
-	})();
+	await setTimeout(5000);
+	stopAnimation();
 	```
 	*/
 	gifFile: (
@@ -181,9 +169,9 @@ declare const terminalImage: {
 			width?: string | number;
 			height?: string | number;
 			maximumFrameRate?: number;
-			renderFrame?: terminalImage.RenderFrame;
+			renderFrame?: RenderFrame;
 		}>
 	) => () => void;
 };
 
-export = terminalImage;
+export default terminalImage;

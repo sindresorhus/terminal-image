@@ -1,5 +1,4 @@
-'use strict';
-const terminalImage = require('.');
+import terminalImage from './index.js';
 
 (async () => {
 	console.log(await terminalImage.file('fixture.jpg'));

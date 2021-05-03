@@ -1,4 +1,3 @@
-'use strict';
-const terminalImage = require('.');
+import terminalImage from './index.js';
 
 terminalImage.gifFile('fixture.gif');

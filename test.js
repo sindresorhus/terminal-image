@@ -1,7 +1,7 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import delay from 'delay';
 import test from 'ava';
-import terminalImage from '.';
+import terminalImage from './index.js';
 
 test('.buffer()', async t => {
 	const result = await terminalImage.buffer(fs.readFileSync('fixture.jpg'));

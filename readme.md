@@ -17,11 +17,9 @@ $ npm install terminal-image
 ## Usage
 
 ```js
-const terminalImage = require('terminal-image');
+import terminalImage from 'terminal-image';
 
-(async () => {
-	console.log(await terminalImage.file('unicorn.jpg'));
-})();
+console.log(await terminalImage.file('unicorn.jpg'));
 ```
 
 Optionally, you can specify the `height` and/or `width` to scale the image. That can be either the percentage of the terminal window or number of rows and/or columns. Please note that the image will always be scaled to fit the size of the terminal. If width and height are not defined, by default the image will take the width and height of the terminal.
@@ -29,31 +27,25 @@ Optionally, you can specify the `height` and/or `width` to scale the image. That
 It is recommended to use the percentage option.
 
 ```js
-const terminalImage = require('terminal-image');
+import terminalImage from 'terminal-image';
 
-(async () => {
-	console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
-})();
+console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
 ```
 
 You can set width and/or height as columns and/or rows of the terminal window as well.
 
 ```js
-const terminalImage = require('terminal-image');
+import terminalImage from 'terminal-image';
 
-(async () => {
-	console.log(await terminalImage.file('unicorn.jpg', {width: 50}));
-})();
+console.log(await terminalImage.file('unicorn.jpg', {width: 50}));
 ```
 
 By default, aspect ratio is always maintained. If you don't want to maintain aspect ratio, set `preserveAspectRatio` to false. However, your image will be scaled to fit the size of the terminal.
 
 ```js
-const terminalImage = require('terminal-image');
+import terminalImage from 'terminal-image';
 
-(async () => {
-	console.log(await terminalImage.file('unicorn.jpg', {width: 70, height: 50, preserveAspectRatio: false}));
-})();
+console.log(await terminalImage.file('unicorn.jpg', {width: 70, height: 50, preserveAspectRatio: false}));
 ```
 
 ## API
@@ -133,13 +125,11 @@ This can be set to perform a cleanup when playback has finished.
 ### Display a remote image
 
 ```js
-const terminalImage = require('terminal-image');
-const got = require('got');
+import terminalImage from 'terminal-image';
+import got from 'got';
 
-(async () => {
-	const body = await got('https://sindresorhus.com/unicorn').buffer();
-	console.log(await terminalImage.buffer(body));
-})();
+const body = await got('https://sindresorhus.com/unicorn').buffer();
+console.log(await terminalImage.buffer(body));
 ```
 
 ## Related

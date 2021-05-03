@@ -1,17 +1,14 @@
-'use strict';
-const {promisify} = require('util');
-const fs = require('fs');
-const chalk = require('chalk');
-const Jimp = require('jimp');
-const termImg = require('term-img');
-const renderGif = require('render-gif');
-const logUpdate = require('log-update');
+import fs, {promises as fsPromises} from 'node:fs';
+import chalk from 'chalk';
+import Jimp from 'jimp';
+import termImg from 'term-img';
+import renderGif from 'render-gif';
+import logUpdate from 'log-update';
 
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
 
 const PIXEL = '\u2584';
-const readFile = promisify(fs.readFile);
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
@@ -83,12 +80,7 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 		for (let x = 0; x < image.bitmap.width; x++) {
 			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
 			const {r: r2, g: g2, b: b2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
-
-			if (a === 0) {
-				result += chalk.reset(' ');
-			} else {
-				result += chalk.bgRgb(r, g, b).rgb(r2, g2, b2)(PIXEL);
-			}
+			result += a === 0 ? chalk.reset(' ') : chalk.bgRgb(r, g, b).rgb(r2, g2, b2)(PIXEL);
 		}
 
 		result += '\n';
@@ -97,7 +89,9 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 	return result;
 }
 
-exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
+const terminalImage = {};
+
+terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
 	return termImg(buffer, {
 		width,
 		height,
@@ -105,10 +99,10 @@ exports.buffer = async (buffer, {width = '100%', height = '100%', preserveAspect
 	});
 };
 
-exports.file = async (filePath, options = {}) =>
-	exports.buffer(await readFile(filePath), options);
+terminalImage.file = async (filePath, options = {}) =>
+	terminalImage.buffer(await fsPromises.readFile(filePath), options);
 
-exports.gifBuffer = (buffer, options = {}) => {
+terminalImage.gifBuffer = (buffer, options = {}) => {
 	options = {
 		renderFrame: logUpdate,
 		maximumFrameRate: 30,
@@ -133,7 +127,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 	}
 
 	const animation = renderGif(buffer, async frameData => {
-		options.renderFrame(await exports.buffer(Buffer.from(frameData), options));
+		options.renderFrame(await terminalImage.buffer(Buffer.from(frameData), options));
 	}, options);
 
 	return () => {
@@ -142,5 +136,7 @@ exports.gifBuffer = (buffer, options = {}) => {
 	};
 };
 
-exports.gifFile = (filePath, options = {}) =>
-	exports.gifBuffer(fs.readFileSync(filePath), options);
+terminalImage.gifFile = (filePath, options = {}) =>
+	terminalImage.gifBuffer(fs.readFileSync(filePath), options);
+
+export default terminalImage;
