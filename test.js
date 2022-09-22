@@ -13,6 +13,16 @@ test('.file()', async t => {
 	t.is(typeof result, 'string');
 });
 
+test('.bufferSync()', t => {
+	const result = terminalImage.bufferSync(fs.readFileSync('fixture.jpg'));
+	t.is(typeof result, 'string');
+});
+
+test('.fileSync()', t => {
+	const result = terminalImage.fileSync('fixture.jpg');
+	t.is(typeof result, 'string');
+});
+
 test('.gifBuffer()', async t => {
 	let result = '';
 	const stopAnimation = terminalImage.gifBuffer(fs.readFileSync('fixture.gif'), {

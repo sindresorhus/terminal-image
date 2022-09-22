@@ -102,6 +102,17 @@ terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserve
 terminalImage.file = async (filePath, options = {}) =>
 	terminalImage.buffer(await fsPromises.readFile(filePath), options);
 
+terminalImage.bufferSync = (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
+	return termImg(buffer, {
+		width,
+		height,
+		fallback: () => render(buffer, {height, width, preserveAspectRatio})
+	});
+};
+
+terminalImage.fileSync = (filePath, options = {}) =>
+	terminalImage.bufferSync(fs.readFileSync(filePath), options);
+
 terminalImage.gifBuffer = (buffer, options = {}) => {
 	options = {
 		renderFrame: logUpdate,

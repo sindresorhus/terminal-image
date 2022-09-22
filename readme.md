@@ -57,6 +57,11 @@ Supports PNG and JPEG images. Animated GIFs are also supported with `.gifBuffer`
 
 Returns a `Promise<string>` with the ANSI escape codes to display the image.
 
+### terminalImage.bufferSync(imageBuffer, options?)
+### terminalImage.fileSync(filePath, options?)
+
+Returns a `string` synchronously with the ANSI escape codes to display the image.
+
 ### terminalImage.gifBuffer(imageBuffer, options?)
 ### terminalImage.gifFile(filePath, options?)
 
