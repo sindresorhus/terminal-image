@@ -1,12 +1,5 @@
 export type RenderFrame = {
 	/**
-	Custom handler which is run when the animation playback is stopped.
-
-	This can be set to perform a cleanup when playback has finished.
-	*/
-	done?: () => void;
-
-	/**
 	Custom handler which is run for each frame of the GIF.
 
 	This can be set to change how each frame is shown.
@@ -14,6 +7,13 @@ export type RenderFrame = {
 	@param text - The frame which should be rendered.
 	*/
 	(text: string): void;
+
+	/**
+	Custom handler which is run when the animation playback is stopped.
+
+	This can be set to perform a cleanup when playback has finished.
+	*/
+	done?: () => void;
 };
 
 declare const terminalImage: {
