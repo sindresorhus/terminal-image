@@ -10,8 +10,8 @@ Works in any terminal that supports colors.
 
 ## Install
 
-```
-$ npm install terminal-image
+```sh
+npm install terminal-image
 ```
 
 ## Usage

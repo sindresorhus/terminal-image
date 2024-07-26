@@ -1,9 +1,12 @@
-import fs, {promises as fsPromises} from 'node:fs';
+import process from 'node:process';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import chalk from 'chalk';
 import Jimp from 'jimp';
 import termImg from 'term-img';
 import renderGif from 'render-gif';
 import logUpdate from 'log-update';
+import {imageDimensionsFromData} from 'image-dimensions';
 
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
@@ -68,7 +71,7 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
-	const image = await Jimp.read(buffer);
+	const image = await Jimp.read(Buffer.from(buffer));
 	const {bitmap} = image;
 
 	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
@@ -91,13 +94,11 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 
 const terminalImage = {};
 
-terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => {
-	return termImg(buffer, {
-		width,
-		height,
-		fallback: () => render(buffer, {height, width, preserveAspectRatio})
-	});
-};
+terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true} = {}) => termImg(buffer, {
+	width,
+	height,
+	fallback: () => render(buffer, {height, width, preserveAspectRatio}),
+});
 
 terminalImage.file = async (filePath, options = {}) =>
 	terminalImage.buffer(await fsPromises.readFile(filePath), options);
@@ -106,19 +107,22 @@ terminalImage.gifBuffer = (buffer, options = {}) => {
 	options = {
 		renderFrame: logUpdate,
 		maximumFrameRate: 30,
-		...options
+		...options,
 	};
 
 	const finalize = () => {
-		if (options.renderFrame.done) {
-			options.renderFrame.done();
-		}
+		options.renderFrame.done?.();
 	};
+
+	const dimensions = imageDimensionsFromData(buffer);
+	if (dimensions?.width < 2 || dimensions?.width < 2) {
+		throw new Error('The image is too small to be rendered.');
+	}
 
 	const result = termImg(buffer, {
 		width: options.width,
 		height: options.height,
-		fallback: () => false
+		fallback: () => false,
 	});
 
 	if (result) {
@@ -127,7 +131,7 @@ terminalImage.gifBuffer = (buffer, options = {}) => {
 	}
 
 	const animation = renderGif(buffer, async frameData => {
-		options.renderFrame(await terminalImage.buffer(Buffer.from(frameData), options));
+		options.renderFrame(await terminalImage.buffer(frameData, options));
 	}, options);
 
 	return () => {

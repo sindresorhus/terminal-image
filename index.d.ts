@@ -47,7 +47,7 @@ declare const terminalImage: {
 	console.log(await terminalImage.buffer(body, {width: 70, height: 50, preserveAspectRatio: false}));
 	```
 	*/
-	buffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
+	buffer: (imageBuffer: Readonly<Uint8Array>, options?: Readonly<{
 		width?: string | number;
 		height?: string | number;
 		preserveAspectRatio?: boolean;
@@ -124,7 +124,7 @@ declare const terminalImage: {
 	stopAnimation();
 	```
 	*/
-	gifBuffer: (imageBuffer: Readonly<Buffer>, options?: Readonly<{
+	gifBuffer: (imageBuffer: Readonly<Uint8Array>, options?: Readonly<{
 		width?: string | number;
 		height?: string | number;
 		maximumFrameRate?: number;
