@@ -71,7 +71,7 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
-	const image = await Jimp.fromBuffer(buffer);
+	const image = await Jimp.fromBuffer(Buffer.from(buffer));
 	const {bitmap} = image;
 
 	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
