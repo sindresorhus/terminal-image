@@ -2,7 +2,7 @@ import process from 'node:process';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import chalk from 'chalk';
-import Jimp from 'jimp';
+import {Jimp, intToRGBA} from 'jimp';
 import termImg from 'term-img';
 import renderGif from 'render-gif';
 import logUpdate from 'log-update';
@@ -71,18 +71,18 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
-	const image = await Jimp.read(Buffer.from(buffer));
+	const image = await Jimp.fromBuffer(buffer);
 	const {bitmap} = image;
 
 	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
 
-	image.resize(width, height);
+	image.resize({w: width, h: height});
 
 	let result = '';
-	for (let y = 0; y < image.bitmap.height - 1; y += 2) {
-		for (let x = 0; x < image.bitmap.width; x++) {
-			const {r, g, b, a} = Jimp.intToRGBA(image.getPixelColor(x, y));
-			const {r: r2, g: g2, b: b2} = Jimp.intToRGBA(image.getPixelColor(x, y + 1));
+	for (let y = 0; y < bitmap.height - 1; y += 2) {
+		for (let x = 0; x < bitmap.width; x++) {
+			const {r, g, b, a} = intToRGBA(image.getPixelColor(x, y));
+			const {r: r2, g: g2, b: b2} = intToRGBA(image.getPixelColor(x, y + 1));
 			result += a === 0 ? chalk.reset(' ') : chalk.bgRgb(r, g, b).rgb(r2, g2, b2)(PIXEL);
 		}
 
