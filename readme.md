@@ -6,7 +6,7 @@ Works in any terminal that supports colors.
 
 <img src="screenshot.png" width="1082">
 
-*In iTerm, the image will be [displayed in full resolution](screenshot-iterm.jpg), since iTerm has [special image support](https://www.iterm2.com/documentation-images.html).*
+*In iTerm, Kitty, WezTerm, and other terminals with graphics support, the image will be displayed in full resolution. In other terminals, it will be rendered using ANSI block characters.*
 
 ## Install
 
@@ -119,6 +119,14 @@ Default: [log-update](https://github.com/sindresorhus/log-update)
 Custom handler which is run when the animation playback is stopped.
 
 This can be set to perform a cleanup when playback has finished.
+
+### Terminal Protocol Support
+
+It automatically detects and uses the best available protocol:
+
+1. **Kitty Graphics Protocol** - Full resolution support in Kitty, Konsole, WezTerm (when configured)
+1. **iTerm2 Inline Images Protocol** - Full resolution support in iTerm2 and compatible terminals
+1. **ANSI Block Characters** - Universal fallback using Unicode half-blocks with 24-bit color
 
 ## Tip
 
