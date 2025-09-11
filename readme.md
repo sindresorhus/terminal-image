@@ -120,7 +120,7 @@ Custom handler which is run when the animation playback is stopped.
 
 This can be set to perform a cleanup when playback has finished.
 
-### Terminal Protocol Support
+## Terminal Protocol Support
 
 It automatically detects and uses the best available protocol:
 

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import delay from 'delay';
+import {setTimeout as delay} from 'node:timers/promises';
 import test from 'ava';
 import terminalImage from './index.js';
 

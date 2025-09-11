@@ -71,7 +71,7 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
-	const image = await Jimp.fromBuffer(Buffer.from(buffer));
+	const image = await Jimp.fromBuffer(Buffer.from(buffer)); // eslint-disable-line n/prefer-global/buffer
 	const {bitmap} = image;
 
 	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
@@ -156,11 +156,11 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 		rows = Math.floor(terminalRows * percentage);
 	} else if (typeof inputHeight === 'number') {
 		rows = Math.min(inputHeight, terminalRows);
-	} else if (!preserveAspectRatio) {
-		// Only set full height if not preserving aspect ratio
+	} else if (preserveAspectRatio) {
+		// If preserveAspectRatio and no height specified, set max height
 		rows = terminalRows;
 	} else {
-		// If preserveAspectRatio and no height specified, set max height
+		// Only set full height if not preserving aspect ratio
 		rows = terminalRows;
 	}
 
@@ -172,7 +172,7 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 
 	if (!isPng) {
 		// Convert to PNG if needed
-		const image = await Jimp.fromBuffer(Buffer.from(buffer));
+		const image = await Jimp.fromBuffer(Buffer.from(buffer)); // eslint-disable-line n/prefer-global/buffer
 		imageBuffer = await image.getBuffer('image/png');
 	}
 
@@ -187,7 +187,7 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 			// Terminal cells are approximately 2:1 (height:width)
 			const cellAspectRatio = 0.5;
 			const terminalAspectRatio = (columns * cellAspectRatio) / rows;
-			
+
 			if (imageAspectRatio > terminalAspectRatio) {
 				// Image is wider than terminal space - constrain by width
 				drawImageWithKitty(imageBuffer, columns, undefined);
