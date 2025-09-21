@@ -210,7 +210,13 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 
 const terminalImage = {};
 
-terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false} = {}) => {
+terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, isTable = false} = {}) => {
+	// Return immediately as ANSI when rendering with something like 'cli-table'
+	// This should fix any issues when rendering a table and image simultaneously
+	if (isTable) {
+		return render(buffer, {height, width, preserveAspectRatio});
+	}
+
 	// Check for Kitty protocol support only if we're in an interactive terminal
 	// and not in iTerm2 (which has its own protocol)
 	// Note: We disable Kitty protocol for GIF frames as it doesn't work well with log-update
