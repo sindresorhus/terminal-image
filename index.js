@@ -210,10 +210,9 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 
 const terminalImage = {};
 
-terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, isTable = false} = {}) => {
-	// Return immediately as ANSI when rendering with something like 'cli-table'
-	// This should fix any issues when rendering a table and image simultaneously
-	if (isTable) {
+terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, disableNativeRender = false} = {}) => {
+	// Explicitly disable native terminal rendering
+	if (disableNativeRender) {
 		return render(buffer, {height, width, preserveAspectRatio});
 	}
 
