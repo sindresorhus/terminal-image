@@ -61,13 +61,5 @@
 		"@types/node": "^24.3.1",
 		"ava": "^6.4.1",
 		"xo": "^1.2.2"
-	},
-	"peerDependencies": {
-		"cli-table3": "^0.6.5"
-	},
-	"peerDependenciesMeta": {
-		"cli-table3": {
-			"optional": true
-		}
 	}
 }

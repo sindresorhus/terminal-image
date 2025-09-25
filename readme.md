@@ -89,6 +89,13 @@ Default: `true`
 
 Whether to maintain image aspect ratio or not.
 
+##### preferNativeRender
+
+Type: `boolean`\
+Default: `true`
+
+Render the image using the terminal's native rendering or ANSI rendering.
+
 ##### maximumFrameRate
 
 **Only works for `terminalImage.gifBuffer` or `terminalImage.gifFile`**
