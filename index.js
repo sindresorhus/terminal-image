@@ -210,9 +210,9 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 
 const terminalImage = {};
 
-terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, disableNativeRender = false} = {}) => {
+terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, preferNativeRender = false} = {}) => {
 	// Explicitly disable native terminal rendering
-	if (disableNativeRender) {
+	if (preferNativeRender) {
 		return render(buffer, {height, width, preserveAspectRatio});
 	}
 
