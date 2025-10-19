@@ -27,14 +27,13 @@ declare const terminalImage: {
 	It is recommended to use the percentage option.
 	You can set width and/or height as columns and/or rows of the terminal window as well.
 	By default, aspect ratio is always maintained. If you don't want to maintain aspect ratio, set preserveAspectRatio to false.
-	We use the native terminal rendering by default. If you want to always render via ANSI, set preferNativeRender to false.
 
 	@param imageBuffer - Buffer with the image.
 	@param options - Image rendering options.
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
-	@param options.preferNativeRender - Optional: Render the image using the terminal's native rendering or ANSI rendering. Default: true.
+	@param options.preferNativeRender - Prefer native terminal image protocols when available; set to false to force ANSI rendering. Default: true.
 	@returns The ansi escape codes to display the image.
 
 	@example
