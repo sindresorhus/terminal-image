@@ -33,6 +33,7 @@ declare const terminalImage: {
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
+	@param options.preferNativeRender - Prefer native terminal image protocols when available; set to false to force ANSI rendering. Default: true.
 	@returns The ansi escape codes to display the image.
 
 	@example
@@ -51,6 +52,7 @@ declare const terminalImage: {
 		width?: string | number;
 		height?: string | number;
 		preserveAspectRatio?: boolean;
+		preferNativeRender?: boolean;
 	}>) => Promise<string>;
 
 	/**
@@ -69,6 +71,7 @@ declare const terminalImage: {
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
+	@param options.preferNativeRender - Prefer native terminal image protocols when available; set to false to force ANSI rendering. Default: true.
 	@returns The ANSI escape codes to display the image.
 
 	@example
@@ -87,6 +90,7 @@ declare const terminalImage: {
 			width?: string | number;
 			height?: string | number;
 			preserveAspectRatio?: boolean;
+			preferNativeRender?: boolean;
 		}>
 	) => Promise<string>;
 
