@@ -94,7 +94,7 @@ Whether to maintain image aspect ratio or not.
 Type: `boolean`\
 Default: `true`
 
-Render the image using the terminal's native rendering or ANSI rendering.
+Prefer native terminal image protocols when available; set to false to force ANSI rendering.
 
 ##### maximumFrameRate
 
