@@ -7,6 +7,7 @@ import termImg from 'term-img';
 import renderGif from 'render-gif';
 import logUpdate from 'log-update';
 import {imageDimensionsFromData} from 'image-dimensions';
+import supportsTerminalGraphics from 'supports-terminal-graphics';
 
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
@@ -68,42 +69,6 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 	height = Math.round(height);
 
 	return {width, height};
-}
-
-// Check if the terminal supports graphics protocols (Kitty, iTerm2 inline images, etc.)
-function supportsTerminalGraphics() {
-	// Don't attempt native graphics rendering if stdout isn't a TTY
-	if (!process.stdout.isTTY) {
-		return false;
-	}
-
-	const {env} = process;
-
-	// Strong indicators for Kitty
-	if (env.KITTY_WINDOW_ID) {
-		return true;
-	}
-
-	// Check TERM_PROGRAM for known graphics-capable terminals
-	const termProgram = env.TERM_PROGRAM || '';
-	const lowerTermProgram = termProgram.toLowerCase();
-	if (['kitty', 'wezterm', 'iterm.app', 'konsole', 'ghostty'].includes(lowerTermProgram)) {
-		return true;
-	}
-
-	// Check TERM for known patterns
-	const term = env.TERM || '';
-	if (/kitty/i.test(term) || term === 'xterm-ghostty') {
-		return true;
-	}
-
-	// Check for Konsole version (additional indicator)
-	if (env.KONSOLE_VERSION) {
-		return true;
-	}
-
-	// Otherwise assume not supported
-	return false;
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
@@ -254,7 +219,7 @@ terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserve
 
 	// Check for terminal graphics support
 	// Note: We disable graphics protocols for GIF frames as they don't work well with log-update
-	if (!isGifFrame && supportsTerminalGraphics()) {
+	if (!isGifFrame && supportsTerminalGraphics.stdout.kitty) {
 		// Use terminal graphics protocol for high-quality rendering
 		try {
 			return await renderKitty(buffer, {width, height, preserveAspectRatio});

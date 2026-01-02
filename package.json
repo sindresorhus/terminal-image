@@ -55,6 +55,7 @@
 		"jimp": "^1.6.0",
 		"log-update": "^6.1.0",
 		"render-gif": "^2.0.4",
+		"supports-terminal-graphics": "^0.1.0",
 		"term-img": "^7.0.0"
 	},
 	"devDependencies": {
