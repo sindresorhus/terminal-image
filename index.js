@@ -70,6 +70,42 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 	return {width, height};
 }
 
+// Check if the terminal supports graphics protocols (Kitty, iTerm2 inline images, etc.)
+function supportsTerminalGraphics() {
+	// Don't attempt native graphics rendering if stdout isn't a TTY
+	if (!process.stdout.isTTY) {
+		return false;
+	}
+
+	const {env} = process;
+
+	// Strong indicators for Kitty
+	if (env.KITTY_WINDOW_ID) {
+		return true;
+	}
+
+	// Check TERM_PROGRAM for known graphics-capable terminals
+	const termProgram = env.TERM_PROGRAM || '';
+	const lowerTermProgram = termProgram.toLowerCase();
+	if (['kitty', 'wezterm', 'iterm.app', 'konsole', 'ghostty'].includes(lowerTermProgram)) {
+		return true;
+	}
+
+	// Check TERM for known patterns
+	const term = env.TERM || '';
+	if (/kitty/i.test(term) || term === 'xterm-ghostty') {
+		return true;
+	}
+
+	// Check for Konsole version (additional indicator)
+	if (env.KONSOLE_VERSION) {
+		return true;
+	}
+
+	// Otherwise assume not supported
+	return false;
+}
+
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
 	const image = await Jimp.fromBuffer(Buffer.from(buffer)); // eslint-disable-line n/prefer-global/buffer
 	const {bitmap} = image;
@@ -216,26 +252,14 @@ terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserve
 		return render(buffer, {height, width, preserveAspectRatio});
 	}
 
-	// Check for Kitty protocol support only if we're in an interactive terminal
-	// and not in iTerm2 (which has its own protocol)
-	// Note: We disable Kitty protocol for GIF frames as it doesn't work well with log-update
-	if (!isGifFrame && process.stdout.isTTY && process.env.TERM_PROGRAM !== 'iTerm.app') {
-		const {env} = process;
-
-		// Check for environment variables that indicate Kitty or Kitty-like terminals
-		const isKittyLike = env.TERM === 'xterm-kitty'
-			|| env.KITTY_WINDOW_ID
-			|| env.TERM_PROGRAM === 'WezTerm'
-			|| env.TERM_PROGRAM === 'konsole'
-			|| env.KONSOLE_VERSION;
-
-		if (isKittyLike) {
-			// Use Kitty Graphics Protocol for high-quality rendering
-			try {
-				return await renderKitty(buffer, {width, height, preserveAspectRatio});
-			} catch {
-				return render(buffer, {height, width, preserveAspectRatio});
-			}
+	// Check for terminal graphics support
+	// Note: We disable graphics protocols for GIF frames as they don't work well with log-update
+	if (!isGifFrame && supportsTerminalGraphics()) {
+		// Use terminal graphics protocol for high-quality rendering
+		try {
+			return await renderKitty(buffer, {width, height, preserveAspectRatio});
+		} catch {
+			return render(buffer, {height, width, preserveAspectRatio});
 		}
 	}
 
