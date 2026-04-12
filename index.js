@@ -1,13 +1,14 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import {Buffer} from 'node:buffer';
 import chalk from 'chalk';
 import {Jimp, intToRGBA} from 'jimp';
 import termImg from 'term-img';
-import renderGif from 'render-gif';
 import logUpdate from 'log-update';
 import {imageDimensionsFromData} from 'image-dimensions';
 import supportsTerminalGraphics from 'supports-terminal-graphics';
+import {playGif} from './gif.js';
 
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
@@ -72,7 +73,7 @@ function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, 
 }
 
 async function render(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
-	const image = await Jimp.fromBuffer(Buffer.from(buffer)); // eslint-disable-line n/prefer-global/buffer
+	const image = await Jimp.fromBuffer(Buffer.from(buffer));
 	const {bitmap} = image;
 
 	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
@@ -173,7 +174,7 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 
 	if (!isPng) {
 		// Convert to PNG if needed
-		const image = await Jimp.fromBuffer(Buffer.from(buffer)); // eslint-disable-line n/prefer-global/buffer
+		const image = await Jimp.fromBuffer(Buffer.from(buffer));
 		imageBuffer = await image.getBuffer('image/png');
 	}
 
@@ -246,7 +247,13 @@ terminalImage.gifBuffer = (buffer, options = {}) => {
 		...options,
 	};
 
+	let isFinalized = false;
 	const finalize = () => {
+		if (isFinalized) {
+			return;
+		}
+
+		isFinalized = true;
 		options.renderFrame.done?.();
 	};
 
@@ -268,10 +275,24 @@ terminalImage.gifBuffer = (buffer, options = {}) => {
 		return finalize;
 	}
 
+	const renderGifFrame = async frameData => {
+		if (isFinalized) {
+			return;
+		}
+
+		const renderedFrame = await terminalImage.buffer(frameData, {...options, isGifFrame: true});
+		if (isFinalized) {
+			return;
+		}
+
+		options.renderFrame(renderedFrame);
+	};
+
 	// Render GIF frame by frame (works with Kitty, iTerm2, and ANSI blocks)
-	const animation = renderGif(buffer, async frameData => {
-		options.renderFrame(await terminalImage.buffer(frameData, {...options, isGifFrame: true}));
-	}, options);
+	const animation = playGif(buffer, renderGifFrame, {
+		...options,
+		onDone: finalize,
+	});
 
 	return () => {
 		animation.isPlaying = false;

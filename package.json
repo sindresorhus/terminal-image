@@ -24,7 +24,8 @@
 	},
 	"files": [
 		"index.js",
-		"index.d.ts"
+		"index.d.ts",
+		"gif.js"
 	],
 	"keywords": [
 		"terminal",
@@ -52,9 +53,9 @@
 	"dependencies": {
 		"chalk": "^5.6.2",
 		"image-dimensions": "^2.5.0",
-		"jimp": "^1.6.0",
-		"log-update": "^6.1.0",
-		"render-gif": "^2.0.4",
+		"jimp": "^1.6.1",
+		"log-update": "^8.0.0",
+		"omggif": "^1.0.10",
 		"supports-terminal-graphics": "^0.1.0",
 		"term-img": "^7.0.0"
 	},
