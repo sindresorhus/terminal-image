@@ -1,18 +1,33 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import chalk from 'chalk';
 import {Jimp, intToRGBA} from 'jimp';
 import termImg from 'term-img';
-import renderGif from 'render-gif';
 import logUpdate from 'log-update';
 import {imageDimensionsFromData} from 'image-dimensions';
 import supportsTerminalGraphics from 'supports-terminal-graphics';
+
+const require = createRequire(import.meta.url);
 
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
 
 const PIXEL = '\u2584';
+
+function getRenderGif() {
+	try {
+		const module = require('render-gif');
+		return module.default ?? module;
+	} catch (error) {
+		if (error && error.code === 'MODULE_NOT_FOUND') {
+			throw new Error('GIF support requires the optional "render-gif" package to be installed.');
+		}
+
+		throw error;
+	}
+}
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
@@ -269,6 +284,7 @@ terminalImage.gifBuffer = (buffer, options = {}) => {
 	}
 
 	// Render GIF frame by frame (works with Kitty, iTerm2, and ANSI blocks)
+	const renderGif = getRenderGif();
 	const animation = renderGif(buffer, async frameData => {
 		options.renderFrame(await terminalImage.buffer(frameData, {...options, isGifFrame: true}));
 	}, options);
