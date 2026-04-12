@@ -68,6 +68,7 @@
 	"devDependencies": {
 		"@types/node": "^24.3.1",
 		"ava": "^6.4.1",
+		"render-gif": "^2.0.4",
 		"xo": "^1.2.2"
 	}
 }
