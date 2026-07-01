@@ -13,7 +13,7 @@ import {playGif} from './gif.js';
 // `log-update` adds an extra newline so the generated frames need to be 2 pixels shorter.
 const ROW_OFFSET = 2;
 
-const PIXEL = '\u2584';
+const PIXEL = '\u{2584}';
 
 function scale(width, height, originalWidth, originalHeight) {
 	const originalRatio = originalWidth / originalHeight;
@@ -25,7 +25,7 @@ function scale(width, height, originalWidth, originalHeight) {
 
 function checkAndGetDimensionValue(value, percentageBase) {
 	if (typeof value === 'string' && value.endsWith('%')) {
-		const percentageValue = Number.parseFloat(value);
+		const percentageValue = Number(value.slice(0, -1));
 		if (!Number.isNaN(percentageValue) && percentageValue > 0 && percentageValue <= 100) {
 			return Math.floor(percentageValue / 100 * percentageBase);
 		}
@@ -38,7 +38,15 @@ function checkAndGetDimensionValue(value, percentageBase) {
 	throw new Error(`${value} is not a valid dimension value`);
 }
 
-function calculateWidthHeight(imageWidth, imageHeight, inputWidth, inputHeight, preserveAspectRatio) {
+function resolveKittyDimension(value, terminalLimit) {
+	if (value === undefined) {
+		return terminalLimit;
+	}
+
+	return Math.min(checkAndGetDimensionValue(value, terminalLimit), terminalLimit);
+}
+
+function calculateWidthHeight({width: imageWidth, height: imageHeight}, inputWidth, inputHeight, preserveAspectRatio) {
 	const terminalColumns = process.stdout.columns || 80;
 	const terminalRows = Math.max(1, (process.stdout.rows || 24) - ROW_OFFSET);
 
@@ -76,7 +84,7 @@ async function render(buffer, {width: inputWidth, height: inputHeight, preserveA
 	const image = await Jimp.fromBuffer(Buffer.from(buffer));
 	const {bitmap} = image;
 
-	const {width, height} = calculateWidthHeight(bitmap.width, bitmap.height, inputWidth, inputHeight, preserveAspectRatio);
+	const {width, height} = calculateWidthHeight(bitmap, inputWidth, inputHeight, preserveAspectRatio);
 
 	image.resize({w: width, h: height});
 
@@ -118,18 +126,35 @@ function drawImageWithKitty(buffer, columns, rows) {
 	}
 
 	// Send image data using Kitty graphics protocol
-	for (let index = 0; index < chunks.length; index++) {
-		const chunk = chunks[index];
+	for (const [index, chunk] of chunks.entries()) {
 		const isLast = index === chunks.length - 1;
 
 		if (index === 0) {
 			// First chunk includes all control data
-			process.stdout.write(`\u001B_G${controlData},m=${isLast ? 0 : 1};${chunk}\u001B\\`);
+			process.stdout.write(`\u{1B}_G${controlData},m=${isLast ? 0 : 1};${chunk}\u{1B}\\`);
 		} else {
 			// Subsequent chunks only need the m flag
-			process.stdout.write(`\u001B_Gm=${isLast ? 0 : 1};${chunk}\u001B\\`);
+			process.stdout.write(`\u{1B}_Gm=${isLast ? 0 : 1};${chunk}\u{1B}\\`);
 		}
 	}
+}
+
+// The Kitty protocol doesn't directly support "fit within bounds while maintaining aspect ratio"
+// when both columns and rows are specified, so pick whichever dimension actually constrains the image.
+function constrainKittyDimensions(buffer, columns, rows) {
+	const dimensions = imageDimensionsFromData(buffer);
+	if (!dimensions?.width || !dimensions?.height) {
+		// Fallback if we can't get dimensions
+		return [columns, undefined];
+	}
+
+	const imageAspectRatio = dimensions.width / dimensions.height;
+	// Terminal cells are approximately 2:1 (height:width)
+	const cellAspectRatio = 0.5;
+	const terminalAspectRatio = (columns * cellAspectRatio) / rows;
+
+	// Image is wider than terminal space - constrain by width. Otherwise, constrain by height.
+	return imageAspectRatio > terminalAspectRatio ? [columns, undefined] : [undefined, rows];
 }
 
 async function renderKitty(buffer, {width: inputWidth, height: inputHeight, preserveAspectRatio}) {
@@ -138,33 +163,8 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 	const terminalRows = Math.max(1, (process.stdout.rows || 24) - 4);
 
 	// Calculate display size in terminal cells
-	let columns;
-	let rows;
-
-	// Handle width
-	if (typeof inputWidth === 'string' && inputWidth.endsWith('%')) {
-		const percentage = Number.parseFloat(inputWidth) / 100;
-		columns = Math.floor(terminalColumns * percentage);
-	} else if (typeof inputWidth === 'number') {
-		columns = Math.min(inputWidth, terminalColumns);
-	} else {
-		// Default: use full width if no width specified
-		columns = terminalColumns;
-	}
-
-	// Handle height
-	if (typeof inputHeight === 'string' && inputHeight.endsWith('%')) {
-		const percentage = Number.parseFloat(inputHeight) / 100;
-		rows = Math.floor(terminalRows * percentage);
-	} else if (typeof inputHeight === 'number') {
-		rows = Math.min(inputHeight, terminalRows);
-	} else if (preserveAspectRatio) {
-		// If preserveAspectRatio and no height specified, set max height
-		rows = terminalRows;
-	} else {
-		// Only set full height if not preserving aspect ratio
-		rows = terminalRows;
-	}
+	const columns = resolveKittyDimension(inputWidth, terminalColumns);
+	const rows = resolveKittyDimension(inputHeight, terminalRows);
 
 	// For PNG images, we can send the original buffer directly
 	let imageBuffer = buffer;
@@ -179,128 +179,109 @@ async function renderKitty(buffer, {width: inputWidth, height: inputHeight, pres
 	}
 
 	// When preserving aspect ratio, we need to fit within both dimensions
-	// The Kitty protocol doesn't directly support "fit within bounds while maintaining aspect ratio"
-	// when both c and r are specified, so we need to calculate which dimension to use
-	if (preserveAspectRatio) {
-		// Get image dimensions to determine which constraint to use
-		const dimensions = imageDimensionsFromData(buffer);
-		if (dimensions && dimensions.width && dimensions.height) {
-			const imageAspectRatio = dimensions.width / dimensions.height;
-			// Terminal cells are approximately 2:1 (height:width)
-			const cellAspectRatio = 0.5;
-			const terminalAspectRatio = (columns * cellAspectRatio) / rows;
+	const [drawColumns, drawRows] = preserveAspectRatio
+		? constrainKittyDimensions(buffer, columns, rows)
+		: [columns, rows];
 
-			if (imageAspectRatio > terminalAspectRatio) {
-				// Image is wider than terminal space - constrain by width
-				drawImageWithKitty(imageBuffer, columns, undefined);
-			} else {
-				// Image is taller than terminal space - constrain by height
-				drawImageWithKitty(imageBuffer, undefined, rows);
-			}
-		} else {
-			// Fallback if we can't get dimensions
-			drawImageWithKitty(imageBuffer, columns, undefined);
-		}
-	} else {
-		// Not preserving aspect ratio, use both dimensions
-		drawImageWithKitty(imageBuffer, columns, rows);
-	}
+	drawImageWithKitty(imageBuffer, drawColumns, drawRows);
 
 	// Return empty string as the drawing is done directly
 	return '';
 }
 
-const terminalImage = {};
-
-terminalImage.buffer = async (buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, preferNativeRender = true} = {}) => {
-	// If not using native terminal rendering, fallback to ANSI
-	if (!preferNativeRender) {
-		return render(buffer, {height, width, preserveAspectRatio});
-	}
-
-	// Check for terminal graphics support
-	// Note: We disable graphics protocols for GIF frames as they don't work well with log-update
-	if (!isGifFrame && supportsTerminalGraphics.stdout.kitty) {
-		// Use terminal graphics protocol for high-quality rendering
-		try {
-			return await renderKitty(buffer, {width, height, preserveAspectRatio});
-		} catch {
+const terminalImage = {
+	async buffer(buffer, {width = '100%', height = '100%', preserveAspectRatio = true, isGifFrame = false, preferNativeRender = true} = {}) {
+		// If not using native terminal rendering, fallback to ANSI
+		if (!preferNativeRender) {
 			return render(buffer, {height, width, preserveAspectRatio});
 		}
-	}
 
-	// Fall back to iTerm2 or ANSI blocks
-	return termImg(buffer, {
-		width,
-		height,
-		fallback: () => render(buffer, {height, width, preserveAspectRatio}),
-	});
+		// Check for terminal graphics support
+		// Note: We disable graphics protocols for GIF frames as they don't work well with log-update
+		if (!isGifFrame && supportsTerminalGraphics.stdout.kitty) {
+			// Use terminal graphics protocol for high-quality rendering
+			try {
+				return await renderKitty(buffer, {width, height, preserveAspectRatio});
+			} catch {
+				return render(buffer, {height, width, preserveAspectRatio});
+			}
+		}
+
+		// Fall back to iTerm2 or ANSI blocks
+		return termImg(buffer, {
+			width,
+			height,
+			fallback: () => render(buffer, {height, width, preserveAspectRatio}),
+		});
+	},
+
+	async file(filePath, options = {}) {
+		return terminalImage.buffer(await fsPromises.readFile(filePath), options);
+	},
+
+	gifBuffer(buffer, options = {}) {
+		options = {
+			renderFrame: logUpdate,
+			maximumFrameRate: 30,
+			...options,
+		};
+
+		let isFinalized = false;
+		const finalize = () => {
+			if (isFinalized) {
+				return;
+			}
+
+			isFinalized = true;
+			options.renderFrame.done?.();
+		};
+
+		const dimensions = imageDimensionsFromData(buffer);
+		if (dimensions?.width < 2 || dimensions?.height < 2) {
+			throw new Error('The image is too small to be rendered.');
+		}
+
+		// Check if we can use native terminal support for GIF
+		// Note: Kitty doesn't have native GIF animation support, so we always use frame-by-frame
+		const result = termImg(buffer, {
+			width: options.width,
+			height: options.height,
+			fallback: () => false,
+		});
+
+		if (result) {
+			options.renderFrame(result);
+			return finalize;
+		}
+
+		const renderGifFrame = async frameData => {
+			if (isFinalized) {
+				return;
+			}
+
+			const renderedFrame = await terminalImage.buffer(frameData, {...options, isGifFrame: true});
+			if (isFinalized) {
+				return;
+			}
+
+			options.renderFrame(renderedFrame);
+		};
+
+		// Render GIF frame by frame (works with Kitty, iTerm2, and ANSI blocks)
+		const animation = playGif(buffer, renderGifFrame, {
+			...options,
+			onDone: finalize,
+		});
+
+		return () => {
+			animation.isPlaying = false;
+			finalize();
+		};
+	},
+
+	gifFile(filePath, options = {}) {
+		return terminalImage.gifBuffer(fs.readFileSync(filePath), options);
+	},
 };
-
-terminalImage.file = async (filePath, options = {}) =>
-	terminalImage.buffer(await fsPromises.readFile(filePath), options);
-
-terminalImage.gifBuffer = (buffer, options = {}) => {
-	options = {
-		renderFrame: logUpdate,
-		maximumFrameRate: 30,
-		...options,
-	};
-
-	let isFinalized = false;
-	const finalize = () => {
-		if (isFinalized) {
-			return;
-		}
-
-		isFinalized = true;
-		options.renderFrame.done?.();
-	};
-
-	const dimensions = imageDimensionsFromData(buffer);
-	if (dimensions?.width < 2 || dimensions?.height < 2) {
-		throw new Error('The image is too small to be rendered.');
-	}
-
-	// Check if we can use native terminal support for GIF
-	// Note: Kitty doesn't have native GIF animation support, so we always use frame-by-frame
-	const result = termImg(buffer, {
-		width: options.width,
-		height: options.height,
-		fallback: () => false,
-	});
-
-	if (result) {
-		options.renderFrame(result);
-		return finalize;
-	}
-
-	const renderGifFrame = async frameData => {
-		if (isFinalized) {
-			return;
-		}
-
-		const renderedFrame = await terminalImage.buffer(frameData, {...options, isGifFrame: true});
-		if (isFinalized) {
-			return;
-		}
-
-		options.renderFrame(renderedFrame);
-	};
-
-	// Render GIF frame by frame (works with Kitty, iTerm2, and ANSI blocks)
-	const animation = playGif(buffer, renderGifFrame, {
-		...options,
-		onDone: finalize,
-	});
-
-	return () => {
-		animation.isPlaying = false;
-		finalize();
-	};
-};
-
-terminalImage.gifFile = (filePath, options = {}) =>
-	terminalImage.gifBuffer(fs.readFileSync(filePath), options);
 
 export default terminalImage;

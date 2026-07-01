@@ -1,7 +1,7 @@
 import {Buffer} from 'node:buffer';
 import {setTimeout as delay} from 'node:timers/promises';
 import {Jimp} from 'jimp';
-import {GifReader} from 'omggif';
+import {decodeGIF, renderGIFFrameSequence} from '@sindresorhus/gifkit';
 
 const MINIMUM_FRAME_DURATION = 10;
 
@@ -13,84 +13,32 @@ function effectiveFrameDuration(frameMs) {
 	return frameMs;
 }
 
-function getBackgroundColor(data) {
-	const packedFields = data[10];
-	const hasGlobalPalette = packedFields >= 128;
-	const backgroundIndex = data[11];
-
-	if (!hasGlobalPalette) {
-		return [0, 0, 0, 0];
-	}
-
-	const paletteOffset = 13 + (backgroundIndex * 3);
-	return [
-		data[paletteOffset],
-		data[paletteOffset + 1],
-		data[paletteOffset + 2],
-		255,
-	];
-}
-
 export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {}) {
-	const reader = new GifReader(data);
-	const {width, height} = reader;
-	const frameCount = reader.numFrames();
-	const loopCount = reader.loopCount();
+	const gif = decodeGIF(data, {strict: false});
+	const {
+		width: canvasWidth,
+		height: canvasHeight,
+	} = gif;
 	const minInterval = 1000 / maximumFrameRate;
-	const totalLoops = loopCount === 0 ? Number.POSITIVE_INFINITY : (loopCount ?? 0) + 1;
-	const backgroundColor = getBackgroundColor(data);
-	const fullFrame = {
-		x: 0,
-		y: 0,
-		width,
-		height,
-	};
 
-	let playing = true;
+	let isPlaying = true;
 	let delayAbortController;
 	let loopPromise;
 
-	const fillFrame = (canvas, frameInfo, color) => {
-		const {x, y, width: frameWidth, height: frameHeight} = frameInfo;
-		const [red, green, blue, alpha] = color;
-
-		for (let row = y; row < y + frameHeight; row++) {
-			for (let column = x; column < x + frameWidth; column++) {
-				const offset = ((row * width) + column) * 4;
-				canvas[offset] = red;
-				canvas[offset + 1] = green;
-				canvas[offset + 2] = blue;
-				canvas[offset + 3] = alpha;
-			}
-		}
-	};
-
-	const restoreBackground = (canvas, frameInfo) => {
-		fillFrame(canvas, frameInfo, backgroundColor);
-	};
-
-	const disposePreviousFrame = (canvas, previousFrameInfo, previousCanvas) => {
-		if (!previousFrameInfo) {
-			return;
-		}
-
-		if (previousFrameInfo.disposal === 2) {
-			restoreBackground(canvas, previousFrameInfo);
-		} else if (previousFrameInfo.disposal === 3 && previousCanvas) {
-			previousCanvas.copy(canvas);
-		}
-	};
-
-	const renderFrame = async canvas => {
-		const image = Jimp.fromBitmap({data: Buffer.from(canvas), width, height});
+	const renderFrame = async frame => {
+		const image = Jimp.fromBitmap({
+			data: Buffer.from(frame.pixels),
+			width: canvasWidth,
+			height: canvasHeight,
+		});
 		const png = await image.getBuffer('image/png');
 
-		if (!playing) {
+		if (!isPlaying) {
 			return false;
 		}
 
 		await onFrame(png);
-		return playing;
+		return isPlaying;
 	};
 
 	const waitForDelay = async milliseconds => {
@@ -148,30 +96,36 @@ export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {
 	};
 
 	const loop = async () => {
-		// Persistent canvas so transparent pixels in later frames reveal previous frame content.
-		const canvas = Buffer.alloc(width * height * 4);
-		restoreBackground(canvas, fullFrame);
-		let completedLoops = 0;
+		await Promise.resolve();
+		if (!isPlaying) {
+			return;
+		}
+
+		const frameIterator = renderGIFFrameSequence(gif, {
+			background: 'gif',
+			strict: false,
+		});
+		const firstFrameResult = frameIterator.next();
+
+		if (firstFrameResult.done) {
+			isPlaying = false;
+			await onDone?.();
+			return;
+		}
+
 		let elapsedSinceRender = 0;
 		let lastRenderTime;
-		let needsInitialRender = true;
-		let previousFrameInfo;
-		let previousCanvas;
+		let isNeedsInitialRender = true;
+		let frame = firstFrameResult.value;
 
-		for (let frameIndex = 0; playing;) {
-			disposePreviousFrame(canvas, previousFrameInfo, previousCanvas);
-			previousFrameInfo = reader.frameInfo(frameIndex);
-			previousCanvas = previousFrameInfo.disposal === 3 ? Buffer.from(canvas) : undefined;
-
-			// Always blit to keep compositing state correct, even for skipped frames.
-			reader.decodeAndBlitFrameRGBA(frameIndex, canvas);
+		while (isPlaying) {
 			delayAbortController = new AbortController();
 
-			const frameMs = previousFrameInfo.delay * 10;
+			const frameMs = frame.delay * 1000;
 			const throttledFrameMs = effectiveFrameDuration(frameMs);
-			let renderedFrame = false;
+			let isRenderedFrame = false;
 			const shouldRenderFrame = minInterval === 0
-				|| needsInitialRender
+				|| isNeedsInitialRender
 				|| elapsedSinceRender + throttledFrameMs >= minInterval;
 
 			try {
@@ -180,8 +134,8 @@ export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {
 						break;
 					}
 
-					renderedFrame = await renderFrame(canvas); // eslint-disable-line no-await-in-loop
-					if (!playing) {
+					isRenderedFrame = await renderFrame(frame); // eslint-disable-line no-await-in-loop
+					if (!isPlaying) {
 						break;
 					}
 
@@ -195,30 +149,26 @@ export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {
 				delayAbortController = undefined;
 			}
 
-			({elapsedSinceRender, needsInitialRender} = updateElapsedSinceRender({
+			({elapsedSinceRender, needsInitialRender: isNeedsInitialRender} = updateElapsedSinceRender({
 				elapsedSinceRender,
-				needsInitialRender,
-				renderedFrame,
+				needsInitialRender: isNeedsInitialRender,
+				renderedFrame: isRenderedFrame,
 				throttledFrameMs,
 			}));
 
-			frameIndex++;
-			if (frameIndex < frameCount) {
+			const nextFrameResult = frameIterator.next();
+			if (!nextFrameResult.done) {
+				frame = nextFrameResult.value;
 				continue;
 			}
 
-			completedLoops++;
-			if (completedLoops >= totalLoops) {
-				if (!renderedFrame) {
-					await renderFrame(canvas); // eslint-disable-line no-await-in-loop
-				}
-
-				playing = false;
-				await onDone?.(); // eslint-disable-line no-await-in-loop
-				break;
+			if (!isRenderedFrame) {
+				await renderFrame(frame); // eslint-disable-line no-await-in-loop
 			}
 
-			frameIndex = 0;
+			isPlaying = false;
+			await onDone?.(); // eslint-disable-line no-await-in-loop
+			break;
 		}
 	};
 
@@ -227,7 +177,7 @@ export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {
 			try {
 				await loop();
 			} catch (error) {
-				playing = false;
+				isPlaying = false;
 				throw error;
 			} finally {
 				loopPromise = undefined;
@@ -239,11 +189,11 @@ export function playGif(data, onFrame, {maximumFrameRate = Infinity, onDone} = {
 
 	return {
 		get isPlaying() {
-			return playing;
+			return isPlaying;
 		},
 		set isPlaying(value) {
-			const wasPlaying = playing;
-			playing = value;
+			const wasPlaying = isPlaying;
+			isPlaying = value;
 			if (!value) {
 				delayAbortController?.abort();
 			} else if (!wasPlaying && !loopPromise) {

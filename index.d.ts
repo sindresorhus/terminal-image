@@ -34,7 +34,7 @@ declare const terminalImage: {
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.preserveAspectRatio - Optional: Whether to maintain image aspect ratio or not. Default: true.
 	@param options.preferNativeRender - Prefer native terminal image protocols when available; set to false to force ANSI rendering. Default: true.
-	@returns The ansi escape codes to display the image.
+	@returns The ANSI escape codes to display the image.
 
 	@example
 	```
@@ -44,7 +44,7 @@ declare const terminalImage: {
 	const body = await got('https://sindresorhus.com/unicorn').buffer();
 	console.log(await terminalImage.buffer(body));
 	console.log(await terminalImage.buffer(body, {width: '50%', height: '50%'}));
-	console.log(await terminalImage.buffer(body, {width: 50 }));
+	console.log(await terminalImage.buffer(body, {width: 50}));
 	console.log(await terminalImage.buffer(body, {width: 70, height: 50, preserveAspectRatio: false}));
 	```
 	*/
@@ -56,7 +56,7 @@ declare const terminalImage: {
 	}>) => Promise<string>;
 
 	/**
-	Display images in the terminal. Please note that the image will always be scaled to fit the size of the terminal.
+	Display images in the terminal.
 
 	Optionally, you can specify the height and/or width to scale the image.
 	That can be either the percentage of the terminal window or number of rows and/or columns.
@@ -80,7 +80,7 @@ declare const terminalImage: {
 
 	console.log(await terminalImage.file('unicorn.jpg'));
 	console.log(await terminalImage.file('unicorn.jpg', {width: '50%', height: '50%'}));
-	console.log(await terminalImage.file('unicorn.jpg', {width: 50 }));
+	console.log(await terminalImage.file('unicorn.jpg', {width: 50}));
 	console.log(await terminalImage.file('unicorn.jpg', {width: 70, height: 50, preserveAspectRatio: false}));
 	```
 	*/
@@ -91,7 +91,7 @@ declare const terminalImage: {
 			height?: string | number;
 			preserveAspectRatio?: boolean;
 			preferNativeRender?: boolean;
-		}>
+		}>,
 	) => Promise<string>;
 
 	/**
@@ -124,7 +124,7 @@ declare const terminalImage: {
 	const gifData = await fs.readFile('unicorn.gif');
 	const stopAnimation = terminalImage.gifBuffer(gifData);
 
-	await delay(5000);
+	await setTimeout(5000);
 	stopAnimation();
 	```
 	*/
@@ -136,7 +136,7 @@ declare const terminalImage: {
 	}>) => () => void;
 
 	/**
-	Display gifs in the terminal.
+	Display GIFs in the terminal.
 
 	Optionally, you can specify the height and/or width to scale the image.
 	That can be either the percentage of the terminal window or number of rows and/or columns.
@@ -145,16 +145,16 @@ declare const terminalImage: {
 	It is recommended to use the percentage option.
 	You can set width and/or height as columns and/or rows of the terminal window as well.
 	By default, aspect ratio is always maintained. If you don't want to maintain aspect ratio, set preserveAspectRatio to false.
-	Each frame of the gif is by default logged to the terminal, overwriting the previous one. To change this behaviour, set renderFrame to a different function. To change the code run when the animation playback is stopped, set renderFrame.done to a different function.
+	Each frame of the GIF is by default logged to the terminal, overwriting the previous one. To change this behavior, set renderFrame to a different function. To change the code run when the animation playback is stopped, set renderFrame.done to a different function.
 
-	@param imageBuffer - Buffer with the image.
+	@param filePath - File path to the image.
 	@param options - Image rendering options.
 	@param options.width - Optional: Custom image width. Can be set as percentage or number of columns of the terminal. It is recommended to use the percentage options.
 	@param options.height - Optional: Custom image height. Can be set as percentage or number of rows of the terminal. It is recommended to use the percentage options.
 	@param options.maximumFrameRate - Optional: Maximum framerate to render the GIF. This option is ignored by iTerm. Defaults to 30.
-	@param options.renderFrame - Optional: Custom handler which is run for each frame of the gif.
+	@param options.renderFrame - Optional: Custom handler which is run for each frame of the GIF.
 	@param options.renderFrame.done - Optional: Custom handler which is run when the animation playback is stopped.
-	@returns A function that can be called to stop the gif animation.
+	@returns A function that can be called to stop the GIF animation.
 
 	@example
 	```
@@ -174,7 +174,7 @@ declare const terminalImage: {
 			height?: string | number;
 			maximumFrameRate?: number;
 			renderFrame?: RenderFrame;
-		}>
+		}>,
 	) => () => void;
 };
 

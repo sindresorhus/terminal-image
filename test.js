@@ -3,35 +3,125 @@ import {execFile} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {Buffer} from 'node:buffer';
 import process from 'node:process';
-import test from 'ava';
-import {GifWriter} from 'omggif';
+import test, {describe, before, after} from 'node:test';
+import assert from 'node:assert/strict';
+import {encodeGIF} from '@sindresorhus/gifkit';
 import {Jimp} from 'jimp';
 import {playGif} from './gif.js';
 import terminalImage from './index.js';
 
 const TIMEOUT = 1000;
-const SMALL_BUFFER_SIZE = 4096;
-const RED_BLUE_PALETTE = [0x00_00_00, 0xFF_00_00, 0x00_00_FF, 0xFF_FF_FF];
-const BLACK_WHITE_PALETTE = [0x00_00_00, 0xFF_FF_FF];
+const RED_BLUE_PALETTE = [[0, 0, 0], [255, 0, 0], [0, 0, 255], [255, 255, 255]];
+const BLACK_WHITE_PALETTE = [[0, 0, 0], [255, 255, 255]];
+const GIF_WITH_OUT_OF_RANGE_BACKGROUND_INDEX = Uint8Array.from([
+	0x47,
+	0x49,
+	0x46,
+	0x38,
+	0x39,
+	0x61,
+	0x01,
+	0x00,
+	0x01,
+	0x00,
+	0x80,
+	0x02,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0xFF,
+	0xFF,
+	0xFF,
+	0x2C,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x01,
+	0x00,
+	0x01,
+	0x00,
+	0x00,
+	0x02,
+	0x02,
+	0x4C,
+	0x01,
+	0x00,
+	0x3B,
+]);
+const GIF_WITH_OUT_OF_RANGE_TRANSPARENT_INDEX = Uint8Array.from([
+	0x47,
+	0x49,
+	0x46,
+	0x38,
+	0x39,
+	0x61,
+	0x01,
+	0x00,
+	0x01,
+	0x00,
+	0x80,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0xFF,
+	0xFF,
+	0xFF,
+	0x21,
+	0xF9,
+	0x04,
+	0x01,
+	0x00,
+	0x00,
+	0x02,
+	0x00,
+	0x2C,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x01,
+	0x00,
+	0x01,
+	0x00,
+	0x00,
+	0x02,
+	0x02,
+	0x44,
+	0x01,
+	0x00,
+	0x3B,
+]);
+
+const DISPOSAL_METHODS = ['unspecified', 'keep', 'restoreBackground', 'restorePrevious'];
 
 function createGif({width = 1, height = 1, loop, palette, background, frames}) {
-	const buffer = Buffer.alloc(SMALL_BUFFER_SIZE);
-	const writer = new GifWriter(buffer, width, height, {
-		...(palette ? {palette} : {}),
-		...(background === undefined ? {} : {background}),
-		...(loop === undefined ? {} : {loop}),
-	});
-
-	for (const frame of frames) {
-		writer.addFrame(frame.x ?? 0, frame.y ?? 0, frame.width ?? width, frame.height ?? height, Buffer.from(frame.pixels), {
-			palette: frame.palette,
-			delay: frame.delay,
-			disposal: frame.disposal,
-			transparent: frame.transparent,
-		});
-	}
-
-	return buffer.subarray(0, writer.end());
+	return Buffer.from(encodeGIF({
+		width,
+		height,
+		...(palette && {globalColorTable: palette}),
+		...(background !== undefined && {backgroundColorIndex: background}),
+		// The legacy `loop` counts extra plays after the first (`0` means forever); gifkit counts total plays.
+		...(loop !== undefined && {playCount: loop === 0 ? 'forever' : loop + 1}),
+		blocks: frames.map(frame => ({
+			type: 'image',
+			left: frame.x ?? 0,
+			top: frame.y ?? 0,
+			width: frame.width ?? width,
+			height: frame.height ?? height,
+			pixels: frame.pixels,
+			...(frame.palette && {colorTable: frame.palette}),
+			graphicControlExtension: {
+				// The legacy `delay` is in hundredths of a second; gifkit uses seconds.
+				...(frame.delay !== undefined && {delay: frame.delay / 100}),
+				...(frame.disposal !== undefined && {disposalMethod: DISPOSAL_METHODS[frame.disposal]}),
+				...(frame.transparent !== undefined && {transparentColorIndex: frame.transparent}),
+			},
+		})),
+	}));
 }
 
 function withBitmapBuffers(onBitmap) {
@@ -45,26 +135,36 @@ function withBitmapBuffers(onBitmap) {
 }
 
 async function waitForGifCompletion(gifData, {onFrame = async () => {}, ...options} = {}) {
-	return new Promise((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			reject(new Error('Timed out waiting for GIF completion'));
-		}, TIMEOUT);
+	const {promise, resolve, reject} = Promise.withResolvers();
+	const timeout = setTimeout(() => {
+		reject(new Error('Timed out waiting for GIF completion'));
+	}, TIMEOUT);
 
-		playGif(gifData, onFrame, {
-			...options,
-			onDone() {
-				clearTimeout(timeout);
-				resolve();
-			},
-		});
+	playGif(gifData, onFrame, {
+		...options,
+		onDone() {
+			clearTimeout(timeout);
+			resolve();
+		},
 	});
+
+	return promise;
 }
 
 async function captureFrames(gifData, {frameCount, ...options} = {}) {
 	const frames = [];
 	let animation;
-	let finish;
 	let shouldStopImmediately = false;
+
+	const {promise, resolve, reject} = Promise.withResolvers();
+	const timeout = setTimeout(() => {
+		reject(new Error('Timed out waiting for GIF frames'));
+	}, TIMEOUT);
+
+	const finish = () => {
+		clearTimeout(timeout);
+		resolve();
+	};
 
 	const restoreBitmap = withBitmapBuffers(data => {
 		frames.push(data);
@@ -75,7 +175,7 @@ async function captureFrames(gifData, {frameCount, ...options} = {}) {
 				shouldStopImmediately = true;
 			}
 
-			finish?.();
+			finish();
 		}
 
 		return {
@@ -86,27 +186,18 @@ async function captureFrames(gifData, {frameCount, ...options} = {}) {
 	});
 
 	try {
-		await new Promise((resolve, reject) => {
-			finish = () => {
-				clearTimeout(timeout);
-				resolve();
-			};
-
-			const timeout = setTimeout(() => {
-				reject(new Error('Timed out waiting for GIF frames'));
-			}, TIMEOUT);
-
-			animation = playGif(gifData, async () => {}, {
-				...options,
-				onDone() {
-					finish();
-				},
-			});
-
-			if (shouldStopImmediately) {
-				animation.isPlaying = false;
-			}
+		animation = playGif(gifData, async () => {}, {
+			...options,
+			onDone() {
+				finish();
+			},
 		});
+
+		if (shouldStopImmediately) {
+			animation.isPlaying = false;
+		}
+
+		await promise;
 	} finally {
 		if (animation) {
 			animation.isPlaying = false;
@@ -150,34 +241,47 @@ function firstPixel(frame) {
 	};
 }
 
-async function execInlineModule(script) {
-	return new Promise((resolve, reject) => {
-		const childProcess = execFile(process.execPath, ['--input-type=module', '-e', script], {
-			cwd: process.cwd(),
-		}, (error, stdout) => {
-			if (error) {
-				reject(error);
-				return;
-			}
-
-			resolve(stdout);
-		});
-
-		childProcess.once('error', reject);
-	});
+function firstTwoPixels(frame) {
+	return [
+		firstPixel(frame),
+		{
+			r: frame[4],
+			g: frame[5],
+			b: frame[6],
+			a: frame[7],
+		},
+	];
 }
 
-test('.buffer()', async t => {
+async function execInlineModule(script) {
+	const {promise, resolve, reject} = Promise.withResolvers();
+	const childProcess = execFile(process.execPath, ['--input-type=module', '-e', script], {
+		cwd: process.cwd(),
+	}, (error, stdout) => {
+		if (error) {
+			reject(error);
+			return;
+		}
+
+		resolve(stdout);
+	});
+
+	childProcess.once('error', reject);
+
+	return promise;
+}
+
+test('.buffer()', async () => {
 	const result = await terminalImage.buffer(fs.readFileSync('fixture.jpg'));
-	t.is(typeof result, 'string');
+	assert.strictEqual(typeof result, 'string');
 });
 
-test('.file()', async t => {
+test('.file()', async () => {
 	const result = await terminalImage.file('fixture.jpg');
-	t.is(typeof result, 'string');
+	assert.strictEqual(typeof result, 'string');
 });
 
-test('.gifBuffer()', async t => {
+test('.gifBuffer()', async () => {
 	let result = '';
 	const stopAnimation = terminalImage.gifBuffer(fs.readFileSync('fixture.gif'), {
 		renderFrame(text) {
@@ -186,10 +290,10 @@ test('.gifBuffer()', async t => {
 	});
 	await delay(500);
 	stopAnimation();
-	t.is(typeof result, 'string');
+	assert.strictEqual(typeof result, 'string');
 });
 
-test('.gifFile()', async t => {
+test('.gifFile()', async () => {
 	let result = '';
 	const stopAnimation = terminalImage.gifFile('fixture.gif', {
 		renderFrame(text) {
@@ -198,67 +302,78 @@ test('.gifFile()', async t => {
 	});
 	await delay(500);
 	stopAnimation();
-	t.is(typeof result, 'string');
+	assert.strictEqual(typeof result, 'string');
 });
 
-test.serial('.gifBuffer() does not render a late frame after stopAnimation()', async t => {
-	const gifData = createGif({
-		width: 2,
-		height: 2,
-		loop: 0,
-		frames: [
-			{
-				palette: BLACK_WHITE_PALETTE,
-				delay: 10,
-				pixels: [1, 1, 1, 1],
-			},
-		],
+describe('.gifBuffer() does not render a late frame after stopAnimation()', () => {
+	let originalTermProgram;
+	let originalTermProgramVersion;
+	let originalKonsoleVersion;
+
+	before(() => {
+		originalTermProgram = process.env.TERM_PROGRAM;
+		originalTermProgramVersion = process.env.TERM_PROGRAM_VERSION;
+		originalKonsoleVersion = process.env.KONSOLE_VERSION;
+		delete process.env.TERM_PROGRAM;
+		delete process.env.TERM_PROGRAM_VERSION;
+		delete process.env.KONSOLE_VERSION;
 	});
-	const renderedFrames = [];
-	let doneCount = 0;
-	const originalBuffer = terminalImage.buffer;
-	const originalTermProgram = process.env.TERM_PROGRAM;
-	const originalTermProgramVersion = process.env.TERM_PROGRAM_VERSION;
-	const originalKonsoleVersion = process.env.KONSOLE_VERSION;
 
-	terminalImage.buffer = async () => {
-		await delay(100);
-		return 'late-frame';
-	};
-
-	delete process.env.TERM_PROGRAM;
-	delete process.env.TERM_PROGRAM_VERSION;
-	delete process.env.KONSOLE_VERSION;
-
-	const renderFrame = text => {
-		renderedFrames.push(text);
-	};
-
-	renderFrame.done = () => {
-		doneCount++;
-	};
-
-	try {
-		const stopAnimation = terminalImage.gifBuffer(gifData, {
-			maximumFrameRate: Number.POSITIVE_INFINITY,
-			renderFrame,
-		});
-
-		await delay(20);
-		stopAnimation();
-		await delay(120);
-	} finally {
-		terminalImage.buffer = originalBuffer;
+	after(() => {
 		process.env.TERM_PROGRAM = originalTermProgram;
 		process.env.TERM_PROGRAM_VERSION = originalTermProgramVersion;
 		process.env.KONSOLE_VERSION = originalKonsoleVersion;
-	}
+	});
 
-	t.deepEqual(renderedFrames, []);
-	t.is(doneCount, 1);
+	test('does not render a late frame', async () => {
+		const gifData = createGif({
+			width: 2,
+			height: 2,
+			loop: 0,
+			frames: [
+				{
+					palette: BLACK_WHITE_PALETTE,
+					delay: 10,
+					pixels: [1, 1, 1, 1],
+				},
+			],
+		});
+		const renderedFrames = [];
+		let doneCount = 0;
+		const originalBuffer = terminalImage.buffer;
+
+		terminalImage.buffer = async () => {
+			await delay(100);
+			return 'late-frame';
+		};
+
+		const renderFrame = text => {
+			renderedFrames.push(text);
+		};
+
+		renderFrame.done = () => {
+			doneCount++;
+		};
+
+		try {
+			const stopAnimation = terminalImage.gifBuffer(gifData, {
+				maximumFrameRate: Infinity,
+				renderFrame,
+			});
+
+			await delay(20);
+			stopAnimation();
+			await delay(120);
+		} finally {
+			terminalImage.buffer = originalBuffer;
+		}
+
+		assert.deepStrictEqual(renderedFrames, []);
+		assert.strictEqual(doneCount, 1);
+	});
 });
 
-test.serial('playGif() honors disposal method 2', async t => {
+test('playGif() honors disposal method 2', async () => {
 	const gifData = createGif({
 		width: 3,
 		height: 2,
@@ -289,10 +404,10 @@ test.serial('playGif() honors disposal method 2', async t => {
 	});
 	const frames = await captureFrames(gifData, {
 		frameCount: 3,
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 	});
 
-	t.deepEqual(
+	assert.deepStrictEqual(
 		firstRow(frames[2]),
 		[
 			{
@@ -308,7 +423,7 @@ test.serial('playGif() honors disposal method 2', async t => {
 	);
 });
 
-test.serial('playGif() honors disposal method 3', async t => {
+test('playGif() honors disposal method 3', async () => {
 	const gifData = createGif({
 		width: 3,
 		height: 2,
@@ -339,10 +454,10 @@ test.serial('playGif() honors disposal method 3', async t => {
 	});
 	const frames = await captureFrames(gifData, {
 		frameCount: 3,
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 	});
 
-	t.deepEqual(
+	assert.deepStrictEqual(
 		firstRow(frames[2]),
 		[
 			{
@@ -358,7 +473,7 @@ test.serial('playGif() honors disposal method 3', async t => {
 	);
 });
 
-test.serial('playGif() respects finite loop counts', async t => {
+test('playGif() respects finite loop counts', async () => {
 	const gifData = createGif({
 		loop: 1,
 		frames: [
@@ -377,16 +492,86 @@ test.serial('playGif() respects finite loop counts', async t => {
 	let frameCount = 0;
 
 	await waitForGifCompletion(gifData, {
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 		async onFrame() {
 			frameCount++;
 		},
 	});
 
-	t.is(frameCount, 4);
+	assert.strictEqual(frameCount, 4);
 });
 
-test.serial('playGif() treats missing loop metadata as a single play', async t => {
+test('playGif() decodes malformed GIFs loosely', async () => {
+	let frameCount = 0;
+
+	await waitForGifCompletion(GIF_WITH_OUT_OF_RANGE_BACKGROUND_INDEX, {
+		maximumFrameRate: Infinity,
+		async onFrame() {
+			frameCount++;
+		},
+	});
+
+	assert.strictEqual(frameCount, 1);
+});
+
+test('playGif() renders GIFs with invalid transparent indexes loosely', async () => {
+	let frameCount = 0;
+
+	await waitForGifCompletion(GIF_WITH_OUT_OF_RANGE_TRANSPARENT_INDEX, {
+		maximumFrameRate: Infinity,
+		async onFrame() {
+			frameCount++;
+		},
+	});
+
+	assert.strictEqual(frameCount, 1);
+});
+
+test('playGif() resets composited pixels across loop boundaries', async () => {
+	const gifData = createGif({
+		width: 2,
+		height: 1,
+		loop: 0,
+		frames: [
+			{
+				width: 1,
+				height: 1,
+				palette: RED_BLUE_PALETTE,
+				delay: 1,
+				pixels: [1],
+			},
+			{
+				x: 1,
+				width: 1,
+				height: 1,
+				palette: RED_BLUE_PALETTE,
+				delay: 1,
+				pixels: [2],
+			},
+		],
+	});
+	const frames = await captureFrames(gifData, {
+		frameCount: 3,
+		maximumFrameRate: Infinity,
+	});
+
+	assert.deepStrictEqual(firstTwoPixels(frames[2]), [
+		{
+			r: 255,
+			g: 0,
+			b: 0,
+			a: 255,
+		},
+		{
+			r: 0,
+			g: 0,
+			b: 0,
+			a: 0,
+		},
+	]);
+});
+
+test('playGif() treats missing loop metadata as a single play', async () => {
 	const gifData = createGif({
 		frames: [
 			{
@@ -404,41 +589,52 @@ test.serial('playGif() treats missing loop metadata as a single play', async t =
 	let frameCount = 0;
 
 	await waitForGifCompletion(gifData, {
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 		async onFrame() {
 			frameCount++;
 		},
 	});
 
-	t.is(frameCount, 2);
+	assert.strictEqual(frameCount, 2);
 });
 
-test.serial('playGif() cancels the in-flight frame timer when stopped', async t => {
+test('playGif() cancels the in-flight frame timer when stopped', async () => {
 	const script = `
 		import {Buffer} from 'node:buffer';
 		import {setTimeout as delay} from 'node:timers/promises';
-		import {GifWriter} from 'omggif';
+		import {encodeGIF} from '@sindresorhus/gifkit';
 		import {playGif} from './gif.js';
 
-		const buffer = Buffer.alloc(4096);
-		const writer = new GifWriter(buffer, 1, 1, {loop: 0});
-		const palette = [0x000000, 0xFFFFFF];
-		writer.addFrame(0, 0, 1, 1, Buffer.from([1]), {palette, delay: 100});
-		const gifData = buffer.subarray(0, writer.end());
+		const gifData = Buffer.from(encodeGIF({
+			width: 1,
+			height: 1,
+			playCount: 'forever',
+			globalColorTable: [[0, 0, 0], [255, 255, 255]],
+			blocks: [{
+				type: 'image',
+				width: 1,
+				height: 1,
+				pixels: [1],
+				graphicControlExtension: {delay: 1},
+			}],
+		}));
+		const start = Date.now();
+		process.once('beforeExit', () => {
+			console.log(Date.now() - start);
+		});
+
 		const animation = playGif(gifData, async () => {});
 
 		await delay(20);
 		animation.isPlaying = false;
 	`;
 
-	const start = Date.now();
+	const elapsed = Number(await execInlineModule(script));
 
-	await execInlineModule(script);
-
-	t.true(Date.now() - start < 500);
+	assert.ok(elapsed < 500);
 });
 
-test.serial('playGif() does not emit a frame after cancellation during encoding', async t => {
+test('playGif() does not emit a frame after cancellation during encoding', async () => {
 	const gifData = createGif({
 		loop: 0,
 		frames: [
@@ -463,7 +659,7 @@ test.serial('playGif() does not emit a frame after cancellation during encoding'
 		animation = playGif(gifData, async () => {
 			frameCount++;
 		}, {
-			maximumFrameRate: Number.POSITIVE_INFINITY,
+			maximumFrameRate: Infinity,
 		});
 
 		await delay(20);
@@ -477,21 +673,28 @@ test.serial('playGif() does not emit a frame after cancellation during encoding'
 		restoreBitmap();
 	}
 
-	t.is(frameCount, 0);
+	assert.strictEqual(frameCount, 0);
 });
 
-test.serial('playGif() does not restart after a frame rendering error', async t => {
+test('playGif() does not restart after a frame rendering error', async () => {
 	const script = `
 		import {Buffer} from 'node:buffer';
-		import {GifWriter} from 'omggif';
+		import {encodeGIF} from '@sindresorhus/gifkit';
 		import {playGif} from './gif.js';
 
-		const buffer = Buffer.alloc(4096);
-		const writer = new GifWriter(buffer, 1, 1, {loop: 0});
-		const palette = [0x000000, 0xFFFFFF];
-		writer.addFrame(0, 0, 1, 1, Buffer.from([0]), {palette, delay: 1});
-
-		const gifData = buffer.subarray(0, writer.end());
+		const gifData = Buffer.from(encodeGIF({
+			width: 1,
+			height: 1,
+			playCount: 'forever',
+			globalColorTable: [[0, 0, 0], [255, 255, 255]],
+			blocks: [{
+				type: 'image',
+				width: 1,
+				height: 1,
+				pixels: [0],
+				graphicControlExtension: {delay: 0.01},
+			}],
+		}));
 		let frameCount = 0;
 
 		process.once('unhandledRejection', error => {
@@ -512,11 +715,11 @@ test.serial('playGif() does not restart after a frame rendering error', async t 
 	const stdout = await execInlineModule(script);
 
 	const {message, frameCount} = JSON.parse(stdout.trim());
-	t.is(message, 'render failure');
-	t.is(frameCount, 1);
+	assert.strictEqual(message, 'render failure');
+	assert.strictEqual(frameCount, 1);
 });
 
-test.serial('playGif() does not lock throttled looping playback to one frame', async t => {
+test('playGif() does not lock throttled looping playback to one frame', async () => {
 	const gifData = createGif({
 		loop: 0,
 		frames: [
@@ -537,22 +740,19 @@ test.serial('playGif() does not lock throttled looping playback to one frame', a
 		maximumFrameRate: 30,
 	});
 	const colors = new Set(frames.map(frame => JSON.stringify(firstPixel(frame))));
+	const expectedColors = new Set([
+		JSON.stringify({
+			r: 255, g: 0, b: 0, a: 255,
+		}),
+		JSON.stringify({
+			r: 0, g: 0, b: 255, a: 255,
+		}),
+	]);
 
-	t.true(colors.has(JSON.stringify({
-		r: 255,
-		g: 0,
-		b: 0,
-		a: 255,
-	})));
-	t.true(colors.has(JSON.stringify({
-		r: 0,
-		g: 0,
-		b: 255,
-		a: 255,
-	})));
+	assert.ok(colors.isSupersetOf(expectedColors));
 });
 
-test.serial('playGif() does not stall throttled looping playback for 0-delay frames', async t => {
+test('playGif() does not stall throttled looping playback for 0-delay frames', async () => {
 	const gifData = createGif({
 		loop: 0,
 		frames: [
@@ -573,22 +773,19 @@ test.serial('playGif() does not stall throttled looping playback for 0-delay fra
 		maximumFrameRate: 30,
 	});
 	const colors = new Set(frames.map(frame => JSON.stringify(firstPixel(frame))));
+	const expectedColors = new Set([
+		JSON.stringify({
+			r: 255, g: 0, b: 0, a: 255,
+		}),
+		JSON.stringify({
+			r: 0, g: 0, b: 255, a: 255,
+		}),
+	]);
 
-	t.true(colors.has(JSON.stringify({
-		r: 255,
-		g: 0,
-		b: 0,
-		a: 255,
-	})));
-	t.true(colors.has(JSON.stringify({
-		r: 0,
-		g: 0,
-		b: 255,
-		a: 255,
-	})));
+	assert.ok(colors.isSupersetOf(expectedColors));
 });
 
-test.serial('playGif() enforces maximumFrameRate before emitting throttled frames', async t => {
+test('playGif() enforces maximumFrameRate before emitting throttled frames', async () => {
 	const gifData = createGif({
 		loop: 0,
 		frames: [
@@ -607,35 +804,36 @@ test.serial('playGif() enforces maximumFrameRate before emitting throttled frame
 	const frameTimes = [];
 	let animation;
 
+	const {promise, resolve, reject} = Promise.withResolvers();
+	const timeout = setTimeout(() => {
+		reject(new Error('Timed out waiting for GIF frames'));
+	}, TIMEOUT);
+
 	try {
-		await new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				reject(new Error('Timed out waiting for GIF frames'));
-			}, TIMEOUT);
+		animation = playGif(gifData, async () => {
+			frameTimes.push(Date.now());
+			if (frameTimes.length !== 4) {
+				return;
+			}
 
-			animation = playGif(gifData, async () => {
-				frameTimes.push(Date.now());
-				if (frameTimes.length !== 4) {
-					return;
-				}
-
-				animation.isPlaying = false;
-				clearTimeout(timeout);
-				resolve();
-			}, {
-				maximumFrameRate: 30,
-			});
+			animation.isPlaying = false;
+			clearTimeout(timeout);
+			resolve();
+		}, {
+			maximumFrameRate: 30,
 		});
+
+		await promise;
 	} finally {
 		if (animation) {
 			animation.isPlaying = false;
 		}
 	}
 
-	t.true(frameTimes[3] - frameTimes[0] >= 90);
+	assert.ok(frameTimes[3] - frameTimes[0] >= 90);
 });
 
-test.serial('playGif() flushes the final frame before completion when throttled', async t => {
+test('playGif() flushes the final frame before completion when throttled', async () => {
 	const gifData = createGif({
 		frames: [
 			{
@@ -654,8 +852,8 @@ test.serial('playGif() flushes the final frame before completion when throttled'
 		maximumFrameRate: 30,
 	});
 
-	t.is(frames.length, 2);
-	t.deepEqual(firstPixel(frames[1]), {
+	assert.strictEqual(frames.length, 2);
+	assert.deepStrictEqual(firstPixel(frames[1]), {
 		r: 0,
 		g: 0,
 		b: 255,
@@ -663,7 +861,7 @@ test.serial('playGif() flushes the final frame before completion when throttled'
 	});
 });
 
-test.serial('playGif() restores disposal method 2 regions to the GIF background color', async t => {
+test('playGif() restores disposal method 2 regions to the GIF background color', async () => {
 	const gifData = createGif({
 		width: 3,
 		palette: RED_BLUE_PALETTE,
@@ -693,10 +891,10 @@ test.serial('playGif() restores disposal method 2 regions to the GIF background 
 	});
 	const frames = await captureFrames(gifData, {
 		frameCount: 3,
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 	});
 
-	t.deepEqual(firstRow(frames[2]), [
+	assert.deepStrictEqual(firstRow(frames[2]), [
 		{
 			r: 255,
 			g: 0,
@@ -718,7 +916,7 @@ test.serial('playGif() restores disposal method 2 regions to the GIF background 
 	]);
 });
 
-test.serial('playGif() initializes the first frame against the GIF background color', async t => {
+test('playGif() initializes the first frame against the GIF background color', async () => {
 	const gifData = createGif({
 		width: 3,
 		palette: RED_BLUE_PALETTE,
@@ -736,10 +934,10 @@ test.serial('playGif() initializes the first frame against the GIF background co
 	});
 	const frames = await captureFrames(gifData, {
 		frameCount: 1,
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 	});
 
-	t.deepEqual(firstRow(frames[0]), [
+	assert.deepStrictEqual(firstRow(frames[0]), [
 		{
 			r: 255,
 			g: 0,
@@ -761,8 +959,8 @@ test.serial('playGif() initializes the first frame against the GIF background co
 	]);
 });
 
-test.serial('playGif() respects background color from global palette index 0', async t => {
-	const palette = [0x00_FF_00, 0x00_00_FF, 0xFF_FF_FF, 0x00_00_00];
+test('playGif() respects background color from global palette index 0', async () => {
+	const palette = [[0, 255, 0], [0, 0, 255], [255, 255, 255], [0, 0, 0]];
 	const gifData = createGif({
 		width: 3,
 		palette,
@@ -779,10 +977,10 @@ test.serial('playGif() respects background color from global palette index 0', a
 	});
 	const frames = await captureFrames(gifData, {
 		frameCount: 1,
-		maximumFrameRate: Number.POSITIVE_INFINITY,
+		maximumFrameRate: Infinity,
 	});
 
-	t.deepEqual(firstRow(frames[0]), [
+	assert.deepStrictEqual(firstRow(frames[0]), [
 		{
 			r: 0,
 			g: 255,
