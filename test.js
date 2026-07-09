@@ -305,6 +305,43 @@ test('.gifFile()', async () => {
 	assert.strictEqual(typeof result, 'string');
 });
 
+test('.buffer() suppresses the Kitty graphics protocol acknowledgement', async () => {
+	// When rendering via the Kitty graphics protocol, every chunk of the control data must
+	// include `q=2` so the terminal suppresses its `OK`/error responses. The terminal sends its
+	// acknowledgement only after the final chunk, so a missing `q=2` on any chunk leaks replies
+	// like `Gi=0;OK` onto the shell as visible text after the program exits.
+	const script = `
+		process.stdout.isTTY = true;
+		process.env.KITTY_WINDOW_ID = '1';
+		const fs = await import('node:fs');
+		const {default: terminalImage} = await import('./index.js');
+
+		// Capture the emitted escape codes instead of dumping the whole image payload to stdout.
+		let captured = '';
+		const originalWrite = process.stdout.write.bind(process.stdout);
+		process.stdout.write = (chunk, encoding, callback) => {
+			captured += chunk;
+			(typeof encoding === 'function' ? encoding : callback)?.();
+			return true;
+		};
+
+		await terminalImage.buffer(fs.readFileSync('fixture.jpg'));
+
+		process.stdout.write = originalWrite;
+		// Report each chunk's control data (between '_G' and its first ';'); base64 payloads never contain '_G'.
+		const controlSegments = [...captured.matchAll(/_G([^;]*);/g)].map(match => match[1]);
+		process.stdout.write(JSON.stringify(controlSegments));
+	`;
+
+	const segments = JSON.parse(await execInlineModule(script));
+
+	// The image is sent in multiple chunks; every chunk (including the last, which triggers the
+	// terminal's response) must carry `q=2`.
+	assert.ok(segments.length > 1);
+	const chunksMissingQuiet = segments.filter(segment => !/(?:^|,)q=2(?:,|$)/v.test(segment));
+	assert.deepEqual(chunksMissingQuiet, []);
+});
+
 describe('.gifBuffer() does not render a late frame after stopAnimation()', () => {
 	let originalTermProgram;
 	let originalTermProgramVersion;

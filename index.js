@@ -114,7 +114,8 @@ function drawImageWithKitty(buffer, columns, rows) {
 	}
 
 	// Build control data
-	let controlData = 'f=100,a=T'; // PNG format, transmit and display
+	// `q=2` suppresses the terminal's `OK`/error responses, which would otherwise leak onto the shell as visible text (e.g. `Gi=0;OK`).
+	let controlData = 'f=100,a=T,q=2'; // PNG format, transmit and display, suppress responses
 
 	// Add sizing parameters if specified
 	if (columns !== undefined && columns > 0) {
@@ -133,8 +134,8 @@ function drawImageWithKitty(buffer, columns, rows) {
 			// First chunk includes all control data
 			process.stdout.write(`\u{1B}_G${controlData},m=${isLast ? 0 : 1};${chunk}\u{1B}\\`);
 		} else {
-			// Subsequent chunks only need the m flag
-			process.stdout.write(`\u{1B}_Gm=${isLast ? 0 : 1};${chunk}\u{1B}\\`);
+			// Subsequent chunks only need the `m` flag, plus `q=2` so the response emitted after the last chunk stays suppressed.
+			process.stdout.write(`\u{1B}_Gq=2,m=${isLast ? 0 : 1};${chunk}\u{1B}\\`);
 		}
 	}
 }
