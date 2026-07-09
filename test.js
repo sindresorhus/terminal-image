@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import {execFile} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {Buffer} from 'node:buffer';
+import {performance} from 'node:perf_hooks';
 import process from 'node:process';
 import test, {describe, before, after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,6 +12,7 @@ import {playGif} from './gif.js';
 import terminalImage from './index.js';
 
 const TIMEOUT = 1000;
+const isMacOS = process.platform === 'darwin';
 const RED_BLUE_PALETTE = [[0, 0, 0], [255, 0, 0], [0, 0, 255], [255, 255, 255]];
 const BLACK_WHITE_PALETTE = [[0, 0, 0], [255, 255, 255]];
 const GIF_WITH_OUT_OF_RANGE_BACKGROUND_INDEX = Uint8Array.from([
@@ -345,21 +347,31 @@ test('.buffer() suppresses the Kitty graphics protocol acknowledgement', async (
 	assert.deepEqual(chunksMissingQuiet, []);
 });
 
-test('.buffer() uses the native iTerm2 protocol instead of Kitty in iTerm2', async () => {
+test('.buffer() uses the native iTerm2 protocol instead of Kitty in iTerm2 on macOS', async () => {
 	// Although iTerm2 reports Kitty support (3.6.1+), it does not render terminal-image's Kitty
 	// output, so iTerm2 must use its own native inline-image protocol (OSC 1337) via term-img instead.
 	const script = `
 		process.stdout.isTTY = true;
 		process.env.TERM_PROGRAM = 'iTerm.app';
 		process.env.TERM_PROGRAM_VERSION = '3.6.9';
+		process.env.KITTY_WINDOW_ID = '1';
 		const fs = await import('node:fs');
 		const {default: terminalImage} = await import('./index.js');
 
+		let captured = '';
+		const originalWrite = process.stdout.write.bind(process.stdout);
+		process.stdout.write = (chunk, encoding, callback) => {
+			captured += chunk;
+			(typeof encoding === 'function' ? encoding : callback)?.();
+			return true;
+		};
+
 		const result = await terminalImage.buffer(fs.readFileSync('fixture.jpg'));
-		process.stdout.write(result.includes(']1337;File=') ? 'iterm-native' : 'not-native');
+		process.stdout.write = originalWrite;
+		process.stdout.write(captured.includes('_G') ? 'kitty' : result.includes(']1337;File=') ? 'iterm-native' : 'ansi-fallback');
 	`;
 
-	assert.equal(await execInlineModule(script), 'iterm-native');
+	assert.equal(await execInlineModule(script), isMacOS ? 'iterm-native' : 'ansi-fallback');
 });
 
 describe('.gifBuffer() does not render a late frame after stopAnimation()', () => {
@@ -658,7 +670,6 @@ test('playGif() treats missing loop metadata as a single play', async () => {
 test('playGif() cancels the in-flight frame timer when stopped', async () => {
 	const script = `
 		import {Buffer} from 'node:buffer';
-		import {setTimeout as delay} from 'node:timers/promises';
 		import {encodeGIF} from '@sindresorhus/gifkit';
 		import {playGif} from './gif.js';
 
@@ -675,18 +686,52 @@ test('playGif() cancels the in-flight frame timer when stopped', async () => {
 				graphicControlExtension: {delay: 1},
 			}],
 		}));
-		const start = Date.now();
-		process.once('beforeExit', () => {
-			console.log(Date.now() - start);
+
+		const startupTimer = setTimeout(() => {}, 10_000);
+		let animation;
+		let isStopScheduled = false;
+		animation = playGif(gifData, async () => {
+			clearTimeout(startupTimer);
+
+			if (isStopScheduled) {
+				return;
+			}
+
+			isStopScheduled = true;
+			setTimeout(() => {
+				process.stdout.write('stopped' + String.fromCharCode(10));
+				animation.isPlaying = false;
+			}, 20);
 		});
-
-		const animation = playGif(gifData, async () => {});
-
-		await delay(20);
-		animation.isPlaying = false;
 	`;
 
-	const elapsed = Number(await execInlineModule(script));
+	const {promise, resolve, reject} = Promise.withResolvers();
+	let stopTime;
+	const childProcess = execFile(process.execPath, ['--input-type=module', '-e', script], {
+		cwd: process.cwd(),
+	}, error => {
+		if (error) {
+			reject(error);
+			return;
+		}
+
+		if (stopTime === undefined) {
+			reject(new Error('The child process exited before stopping the animation.'));
+			return;
+		}
+
+		resolve(performance.now() - stopTime);
+	});
+
+	childProcess.once('error', reject);
+	childProcess.stdout.setEncoding('utf8');
+	childProcess.stdout.on('data', data => {
+		if (stopTime === undefined && data.includes('stopped')) {
+			stopTime = performance.now();
+		}
+	});
+
+	const elapsed = await promise;
 
 	assert.ok(elapsed < 500);
 });
