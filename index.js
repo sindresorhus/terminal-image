@@ -197,9 +197,12 @@ const terminalImage = {
 			return render(buffer, {height, width, preserveAspectRatio});
 		}
 
+		// Although iTerm2 reports Kitty support (3.6.1+), it doesn't reliably render it, so prefer its own native inline-image protocol (handled by `term-img` below).
+		const isITerm2 = process.env.TERM_PROGRAM === 'iTerm.app';
+
 		// Check for terminal graphics support
 		// Note: We disable graphics protocols for GIF frames as they don't work well with log-update
-		if (!isGifFrame && supportsTerminalGraphics.stdout.kitty) {
+		if (!isGifFrame && !isITerm2 && supportsTerminalGraphics.stdout.kitty) {
 			// Use terminal graphics protocol for high-quality rendering
 			try {
 				return await renderKitty(buffer, {width, height, preserveAspectRatio});

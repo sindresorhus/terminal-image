@@ -313,6 +313,9 @@ test('.buffer() suppresses the Kitty graphics protocol acknowledgement', async (
 	const script = `
 		process.stdout.isTTY = true;
 		process.env.KITTY_WINDOW_ID = '1';
+		// Clear any inherited iTerm2 markers so the Kitty path is taken rather than the native iTerm2 one.
+		delete process.env.TERM_PROGRAM;
+		delete process.env.LC_TERMINAL;
 		const fs = await import('node:fs');
 		const {default: terminalImage} = await import('./index.js');
 
@@ -340,6 +343,23 @@ test('.buffer() suppresses the Kitty graphics protocol acknowledgement', async (
 	assert.ok(segments.length > 1);
 	const chunksMissingQuiet = segments.filter(segment => !/(?:^|,)q=2(?:,|$)/v.test(segment));
 	assert.deepEqual(chunksMissingQuiet, []);
+});
+
+test('.buffer() uses the native iTerm2 protocol instead of Kitty in iTerm2', async () => {
+	// Although iTerm2 reports Kitty support (3.6.1+), it does not render terminal-image's Kitty
+	// output, so iTerm2 must use its own native inline-image protocol (OSC 1337) via term-img instead.
+	const script = `
+		process.stdout.isTTY = true;
+		process.env.TERM_PROGRAM = 'iTerm.app';
+		process.env.TERM_PROGRAM_VERSION = '3.6.9';
+		const fs = await import('node:fs');
+		const {default: terminalImage} = await import('./index.js');
+
+		const result = await terminalImage.buffer(fs.readFileSync('fixture.jpg'));
+		process.stdout.write(result.includes(']1337;File=') ? 'iterm-native' : 'not-native');
+	`;
+
+	assert.equal(await execInlineModule(script), 'iterm-native');
 });
 
 describe('.gifBuffer() does not render a late frame after stopAnimation()', () => {
